@@ -38,7 +38,7 @@ total=$(find configs/composite_label_noise -name "*.yaml" | wc -l)
 i=0
 while IFS= read -r cfg; do
   i=$((i + 1))
-  h5=$(python3 -c "
+  h5=$($PYTHON -c "
 import yaml, pathlib
 c = yaml.safe_load(open('$cfg'))
 print(pathlib.Path(c['output_dir']) / c['experiment_name'] / f\"seed_{c['model_seed']}.h5\")
@@ -57,7 +57,7 @@ total=$(find configs/wbc_label_noise -name "*.yaml" | wc -l)
 i=0
 while IFS= read -r cfg; do
   i=$((i + 1))
-  h5=$(python3 -c "
+  h5=$($PYTHON -c "
 import yaml, pathlib
 c = yaml.safe_load(open('$cfg'))
 print(pathlib.Path(c['output_dir']) / c['experiment_name'] / f\"seed_{c['model_seed']}.h5\")
@@ -76,7 +76,7 @@ total=$(find configs/mnist_capacity -name "*.yaml" | wc -l)
 i=0
 while IFS= read -r cfg; do
   i=$((i + 1))
-  h5=$(python3 -c "
+  h5=$($PYTHON -c "
 import yaml, pathlib
 c = yaml.safe_load(open('$cfg'))
 print(pathlib.Path(c['output_dir']) / c['experiment_name'] / f\"seed_{c['model_seed']}.h5\")
