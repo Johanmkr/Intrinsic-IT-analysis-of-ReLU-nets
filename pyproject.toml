@@ -1,0 +1,18 @@
+[project]
+name = "routing-mi-reproduction"
+version = "0.1.0"
+description = "Reproducibility package for the NeurIPS 2026 paper"
+requires-python = ">=3.12"
+dependencies = [
+    "h5py>=3.15",
+    "matplotlib>=3.10",
+    "numpy>=2.2",
+    "pandas>=2.2",
+    "pyyaml>=6.0",
+    "scikit-learn>=1.6",
+    "scipy>=1.15",
+    "torch>=2.7",
+    "torchvision>=0.22",
+    "tqdm>=4.67",
+    "ucimlrepo>=0.0.7",
+]
