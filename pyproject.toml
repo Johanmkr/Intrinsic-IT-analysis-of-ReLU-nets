@@ -16,3 +16,9 @@ dependencies = [
     "tqdm>=4.67",
     "ucimlrepo>=0.0.7",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "parx[h5]>=0.1.3,<0.2",
+]
