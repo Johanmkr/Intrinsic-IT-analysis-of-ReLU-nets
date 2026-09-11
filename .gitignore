@@ -21,7 +21,7 @@ configs/mnist_capacity/
 # Data files (never commit HDF5 or CSVs)
 *.h5
 *.csv
-
+data/
 # OS / editor noise
 .DS_Store
 Thumbs.db
