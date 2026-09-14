@@ -1,5 +1,5 @@
 """
-Recipes 2 & 3 from `claude_new_estimator_instructions.md`:
+Recipes 2 & 3:
 
 - Recipe 2: functional-equivalence quotient via the active subnetwork matrix
   $\\tilde A^l_\\omega$ and ε-tolerance clustering.

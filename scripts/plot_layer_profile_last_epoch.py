@@ -184,7 +184,6 @@ def plot(
     ours_summary: dict[str, pd.DataFrame],
     baseline_summary: dict[str, pd.DataFrame],
     H_Y: dict[str, float],
-    out_path: Path,
 ) -> None:
     n = len(ours_summary)
     fig, axes = plt.subplots(1, n, figsize=(5.0 * n, 4.0), sharey=True)
@@ -220,11 +219,6 @@ def plot(
         frameon=False,
         fontsize=12,
     )
-    # fig.suptitle(
-    #     rf"Layerwise bits at last epoch ($\eta=0$, $\varepsilon={EPS_FUNC:g}$)",
-    #     y=1.13,
-    #     fontsize=18,
-    # )
     savefig(fig, neurips_figpath / "layer_profile_last_epoch")
 
 
@@ -255,7 +249,7 @@ def main() -> None:
 
     if not ours_summary:
         raise SystemExit("no datasets to plot")
-    plot(ours_summary, baseline_summary, H_Y, FIGURES / "layer_profile_last_epoch.png")
+    plot(ours_summary, baseline_summary, H_Y)
 
 
 if __name__ == "__main__":

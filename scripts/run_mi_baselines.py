@@ -9,6 +9,9 @@ New cells are appended and flushed to disk after each cell so a crash only
 loses the cell in progress.  ``--aggregate`` concatenates all per-HDF5 CSVs
 into ``results/mi_baselines.csv``.
 
+MINE and InfoNCE run by default; the paper pipeline disables them with
+``--skip-mine --skip-infonce``.
+
 Examples
 --------
 Smoke run — one HDF5, cheap baselines only::

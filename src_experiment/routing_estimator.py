@@ -1,6 +1,6 @@
 """
-Recipe 1 from `claude_new_estimator_instructions.md`: routing-information
-estimator $\\tilde I(Y;\\Omega_{\\mathcal D})$ on a CPWL ReLU network.
+Recipe 1: routing-information estimator $\\tilde I(Y;\\Omega_{\\mathcal D})$
+on a CPWL ReLU network.
 
 Independent of the Julia tree: weights are loaded from HDF5, but cumulative
 activation patterns are computed from a fresh forward pass on whatever probe
@@ -271,9 +271,9 @@ class RoutingEstimator:
     ) -> pd.DataFrame:
         """Run :meth:`evaluate_epoch` over every saved checkpoint.
 
-        Returns a DataFrame matching the output schema in
-        ``claude_new_estimator_instructions.md`` (Recipe-1 columns only;
-        Recipe-2/3/4 columns are absent until those recipes land).
+        Returns a Recipe-1-only DataFrame (one row per epoch and hidden layer).
+        Recipe-2/3/4 columns are produced by
+        :class:`src_experiment.functional_quotient.FunctionalQuotientEstimator`.
         """
         rows = []
         for ep in self.epochs:

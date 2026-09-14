@@ -1,9 +1,9 @@
 """
-Recipe 4 from `claude_new_estimator_instructions.md`: data-supported region
+Recipe 4: data-supported region
 transition graph (RTG).
 
 Edges connect regions whose cumulative activation patterns differ in exactly
-one bit. Implements the spec's "faster variant": for each region of length
+one bit. Faster variant: for each region of length
 $\\sum_i n_i$ bits, enumerate the single-bit flips and probe membership,
 yielding $O(|\\Omega_{\\mathcal D}| \\cdot \\sum_i n_i)$ work instead of
 $O(|\\Omega_{\\mathcal D}|^2)$.

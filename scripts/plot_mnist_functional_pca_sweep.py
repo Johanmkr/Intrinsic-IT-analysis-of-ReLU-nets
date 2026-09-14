@@ -26,7 +26,6 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -157,7 +156,7 @@ def _draw_vs_epsilon(
     savefig(fig, neurips_figpath / out_stem)
 
 
-def _draw_rho_vs_epsilon(df: pd.DataFrame, out_stem: str, epoch: int) -> None:
+def _draw_rho_vs_epsilon(df: pd.DataFrame, out_stem: str) -> None:
     """ρ_func vs ε, one panel per architecture, lines per PCA dim."""
     agg = (
         df.groupby(["arch_str", "epsilon", "target_dim"])["rho_func"]
@@ -215,11 +214,6 @@ def _draw_rho_vs_epsilon(df: pd.DataFrame, out_stem: str, epoch: int) -> None:
                loc="upper center", ncol=len(pca_dims),
                bbox_to_anchor=(0.5, 1.08), frameon=False, fontsize=16)
 
-    # fig.suptitle(
-    #     r"MNIST: $\rho_{\mathrm{func}}$ vs $\varepsilon$ by PCA dim, per architecture"
-    #     f" (last layer, epoch {epoch})",
-    #     fontsize=18, y=1.04,
-    # )
     fig.tight_layout()
     savefig(fig, neurips_figpath / out_stem)
 
@@ -227,7 +221,8 @@ def _draw_rho_vs_epsilon(df: pd.DataFrame, out_stem: str, epoch: int) -> None:
 def _draw_eps_independent(
     df: pd.DataFrame, col: str, ylabel: str, out_stem: str,
 ) -> None:
-    """For raw/rawmm: one panel per architecture, x=epoch, y=MI, lines per PCA dim."""
+    """For raw/rawmm: one panel per architecture; bars = MI at epsilon=0
+    (mean ± std) vs PCA dim, H(Y) reference line."""
     df = df[df["epsilon"] == 0.0]
     agg = (
         df.groupby(["arch_str", "target_dim"])[col]
@@ -299,7 +294,7 @@ def main() -> None:
     out_stem = f"mnist_{args.type}_vs_eps"
 
     if args.type == "rho":
-        _draw_rho_vs_epsilon(df, out_stem, args.epoch)
+        _draw_rho_vs_epsilon(df, out_stem)
     elif eps_dependent:
         raw_col = "plug_in_bits" if args.type == "func" else "miller_madow_bits"
         raw_label = (r"$\hat{I}_{\mathrm{raw}}$" if args.type == "func"

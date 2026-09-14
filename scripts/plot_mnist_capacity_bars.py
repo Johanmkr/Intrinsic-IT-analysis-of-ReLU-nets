@@ -4,16 +4,13 @@ For each PCA dim, one bar group containing:
   - I_raw  (plug_in_bits,      epsilon-independent)
   - I_func at several key epsilons (plug_in_func_bits)
 
-Two output figures:
-  1. Per-architecture: 2×2 grid, one panel per arch.
-  2. Single-panel:     averaged over the four selected architectures.
+One output figure: 2×2 grid, one panel per architecture.
 
 Inputs:
     results/mnist_capacity_new_estimator.csv
 
 Outputs:
     figures/mnist_capacity_bars_per_arch.png / .pdf
-    figures/mnist_capacity_bars_pooled.png   / .pdf
 """
 
 from __future__ import annotations
@@ -159,17 +156,6 @@ def plot_per_arch(agg_func: pd.DataFrame, agg_raw: pd.DataFrame) -> None:
     savefig(fig, neurips_figpath / "mnist_capacity_bars_per_arch")
 
 
-def plot_pooled(agg_func: pd.DataFrame, agg_raw: pd.DataFrame) -> None:
-    fig, ax = plt.subplots(figsize=(9, 4))
-    _draw_panel(ax, agg_func, agg_raw, arch=None,
-                title=f"Averaged over widths {[ARCH_LABELS[a] for a in ARCHS]}")
-    fig.legend(handles=_make_legend_handles(), loc="upper center",
-               ncol=len(EPSILONS_FUNC) + 1, bbox_to_anchor=(0.5, 1.01),
-               frameon=False, fontsize=16)
-    fig.tight_layout()
-    savefig(fig, neurips_figpath / "mnist_capacity_bars_pooled")
-
-
 def main() -> None:
     FIGURES_DIR.mkdir(exist_ok=True)
     df = load_data()
@@ -177,7 +163,6 @@ def main() -> None:
         raise SystemExit("No data found.")
     agg_func, agg_raw = _aggregate(df)
     plot_per_arch(agg_func, agg_raw)
-    # plot_pooled(agg_func, agg_raw)
 
 
 if __name__ == "__main__":

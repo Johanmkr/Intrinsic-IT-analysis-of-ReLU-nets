@@ -5,7 +5,7 @@
 # Writes: figures/*.pdf and figures/*.png
 #
 # Figures produced:
-#   figure1_pedagogy.{pdf,png}          — intro: ReLU partition + activation pattern
+#   pedagogical_figure1.{pdf,png}       — intro: ReLU partition + activation pattern
 #   calibration_scatter_raw.{pdf,png}   — routing MI vs 3 baselines, 3 datasets
 #   layer_profile_last_epoch.{pdf,png}  — layerwise bits at last epoch
 #   mnist_capacity_bars_per_arch.{pdf,png} — I_raw vs I_func across PCA dims

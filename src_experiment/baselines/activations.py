@@ -124,7 +124,7 @@ def load_lenet_layer_activations(
 ) -> np.ndarray:
     """Return the pre/post activation of one ReLU step in a LeNet-5 HDF5.
 
-    Layer convention (matches :class:`src_experiment.cnn_estimator.LeNetSpec`):
+    Layer convention:
 
     * ``layer = 1 .. n_conv`` — conv-ReLU output (pre-pool), flattened to
       ``(N, C * H * W)``. ``"pre"`` returns the conv output before ReLU

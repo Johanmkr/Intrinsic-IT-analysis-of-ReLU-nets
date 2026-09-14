@@ -3,9 +3,7 @@ Phase A.1 MI baselines: alternative `Î(Y;T)` estimators we benchmark our
 routing-information estimator against.
 
 Each estimator returns a ``dict`` with at least ``"bits"`` (the MI estimate
-in bits) and ``"wall"`` (wall-clock seconds). See
-``planning/phase_a_baselines.md`` §A.1 for the protocol and validation
-tolerances.
+in bits) and ``"wall"`` (wall-clock seconds).
 
 Estimators
 ----------

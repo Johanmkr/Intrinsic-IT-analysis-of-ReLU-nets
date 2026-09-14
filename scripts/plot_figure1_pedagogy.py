@@ -8,7 +8,7 @@ Trains a small 2→4→4→2 network on the moons dataset, then visualises:
   (c) Network diagram – one region ω identified by its activation pattern π_ω
 
 Output:
-    figures/figure1_pedagogy.pdf / .png
+    figures/pedagogical_figure1.pdf / .png
 
 Usage:
     uv run python scripts/plot_figure1_pedagogy.py [--retrain]
@@ -29,7 +29,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 from matplotlib.gridspec import GridSpec
-from matplotlib.patches import ConnectionPatch
 from sklearn.datasets import make_moons
 from sklearn.preprocessing import MinMaxScaler
 
@@ -181,7 +180,7 @@ PALETTE = np.array([hex_to_rgba(c) for c in _RAW_PALETTE])
 def region_image(codes_flat, highlight_code):
     unique = np.unique(codes_flat)
     img = np.zeros((N * N, 4))
-    for i, c in enumerate(unique):
+    for c in unique:
         mask = codes_flat == c
         if c == highlight_code:
             img[mask] = YELLOW_HL
@@ -220,7 +219,6 @@ def label_region(ax, mask, label):
 ax_a.imshow(region_image(code1, c1), origin="lower",
             extent=EXTENT, aspect="equal", interpolation="nearest")
 
-line_cols = plt.cm.Set1(np.linspace(0.0, 0.75, HIDDEN))
 for i in range(HIDDEN):
     ax_a.contour(XX, YY, pre1[:, i].reshape(N, N), levels=[0],
                  colors="black", linewidths=1.5, alpha=0.9, zorder=2)
@@ -236,10 +234,6 @@ ax_a.set_title("(a)  After layer 1", fontsize=12, pad=6)
 # ── Panel (b): full 2-layer partition ─────────────────────────────────────────
 ax_b.imshow(region_image(code_full, best_full), origin="lower",
             extent=EXTENT, aspect="equal", interpolation="nearest")
-
-bnd = np.zeros((N, N), bool)
-bnd[:-1, :] |= (full_grid[:-1, :] != full_grid[1:, :])
-bnd[:, :-1] |= (full_grid[:, :-1] != full_grid[:, 1:])
 
 # Draw boundaries as contours with explicit linewidth
 for code_val in np.unique(full_grid):
@@ -318,10 +312,6 @@ ax_c.text(2.0, -1.20, r"$\pi^{(1)}_\omega = $" + fmt(ACT1), **lbl_kw)
 ax_c.text(3.5, -1.20, r"$\pi^{(2)}_\omega = $" + fmt(ACT2), **lbl_kw)
 
 # ── Save ──────────────────────────────────────────────────────────────────────
-# for ext in ("pdf", "png"):
-#     out = FIGURES / f"figure1_pedagogy.{ext}"
-#     fig.savefig(out, bbox_inches="tight", dpi=200)
-#     print(f"Saved {out}")
 savefig(fig, neurips_figpath / "pedagogical_figure1")
 
 plt.show()

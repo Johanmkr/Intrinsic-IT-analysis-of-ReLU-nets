@@ -1,4 +1,4 @@
-"""Calibration scatter: plug-in routing MI (x) vs each baseline (y).
+"""Calibration scatter: each baseline (x) vs plug-in routing MI (y).
 
 For every (dataset, architecture, seed) at last epoch / deepest layer,
 scatter plug-in routing MI against each baseline. Diagonal y=x and Pearson r
@@ -162,15 +162,12 @@ def plot(df: pd.DataFrame) -> None:
         ax.set_aspect("equal")
         ax.set_xlabel(r"$\hat{I}$: " + bl_label + " [bits]", fontsize=14)
         ax.set_ylabel(OURS_LABEL if ax is axes[0] else "", fontsize=14)
-        # ax.set_title(bl_label, fontsize=14)
         ax.tick_params(labelsize=12)
         ax.grid(alpha=0.25)
 
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="upper center", ncol=len(labels),
                bbox_to_anchor=(0.5, 1.1), frameon=False, fontsize=12)
-    # fig.suptitle("Calibration: plug-in routing MI vs baselines (last epoch, deepest layer)",
-    #              y=1.08, fontsize=14)
     fig.tight_layout()
     savefig(fig, neurips_figpath / OUT_STEM)
 
