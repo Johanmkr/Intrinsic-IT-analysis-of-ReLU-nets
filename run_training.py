@@ -1,26 +1,76 @@
+"""Train networks from YAML configs (step 1).
+
+    python run_training.py CONFIG.yaml [--overwrite]
+        Train one network.
+    python run_training.py --sweeps composite_label_noise ... [--workers N] [--overwrite]
+        Train every configs/<sweep>/*/*.yaml whose HDF5 does not exist yet,
+        N at a time (default: #CPUs − 2), one single-threaded process each.
+        Each network's output goes to logs/train/<sweep>/<experiment>_seed_<s>.log.
+"""
+
 import argparse
+import os
+import subprocess
 import sys
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-# Ensure src_experiment is importable
-sys.path.append(str(Path(__file__).resolve().parent))
+import yaml
 
-from src_experiment.run_experiment import run
+REPO = Path(__file__).resolve().parent
+# Ensure src_experiment is importable
+sys.path.append(str(REPO))
+
+
+def _h5_path(cfg_path: Path) -> Path:
+    c = yaml.safe_load(cfg_path.read_text())
+    return REPO / c["output_dir"] / c["experiment_name"] / f"seed_{c['model_seed']}.h5"
+
+
+def _train_one(cfg_path: Path, overwrite: bool) -> float:
+    t0 = time.perf_counter()
+    rel = cfg_path.relative_to(REPO / "configs")
+    log = REPO / "logs" / "train" / rel.parent.parent / f"{rel.parent.name}_{rel.stem}.log"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    env = {**os.environ, "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"}
+    cmd = [sys.executable, str(REPO / "run_training.py"), str(cfg_path)] + (["--overwrite"] if overwrite else [])
+    with open(log, "w") as f:
+        subprocess.run(cmd, cwd=REPO, env=env, stdout=f, stderr=subprocess.STDOUT, check=True)
+    return time.perf_counter() - t0
+
+
+def train_sweeps(sweeps, workers: int, overwrite: bool) -> int:
+    configs = [c for s in sweeps for c in sorted((REPO / "configs" / s).glob("*/*.yaml"))]
+    todo = [c for c in configs if overwrite or not _h5_path(c).exists()]
+    print(f"{len(configs)} configs, {len(configs) - len(todo)} already trained, "
+          f"training {len(todo)} on {workers} worker(s)", flush=True)
+    t0, failed = time.perf_counter(), 0
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(_train_one, c, overwrite): c for c in todo}
+        for i, fut in enumerate(as_completed(futures), start=1):
+            tag = futures[fut].relative_to(REPO / "configs")
+            try:
+                print(f"[{i}/{len(todo)}] {tag}: {fut.result() / 60:.1f} min", flush=True)
+            except subprocess.CalledProcessError:
+                failed += 1
+                print(f"[{i}/{len(todo)}] FAILED {tag} (see logs/train/)", file=sys.stderr, flush=True)
+    print(f"done in {(time.perf_counter() - t0) / 60:.1f} min, {failed} failed", flush=True)
+    return failed
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run experiment pipeline.")
-    
-    # Positional argument
-    parser.add_argument("config", type=str, help="Path to the YAML configuration file.")
-    
-    # Optional flag
-    parser.add_argument(
-        "--overwrite", 
-        action="store_true", 
-        help="Overwrite existing results if they exist."
-    )
-    
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("config", nargs="?", type=str, help="Path to one YAML configuration file.")
+    parser.add_argument("--sweeps", nargs="+", help="Train all configs of these sweeps (configs/<sweep>/).")
+    parser.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 1) - 2))
+    parser.add_argument("--overwrite", action="store_true", help="Retrain even if the HDF5 exists.")
     args = parser.parse_args()
-    
-    # Execute the experiment passing both the config path and the overwrite flag
+
+    if args.sweeps:
+        sys.exit(1 if train_sweeps(args.sweeps, args.workers, args.overwrite) else 0)
+    if not args.config:
+        parser.error("give a config file or --sweeps")
+
+    from src_experiment.run_experiment import run
     run(args.config, overwrite=args.overwrite)

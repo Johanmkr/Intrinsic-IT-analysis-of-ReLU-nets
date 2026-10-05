@@ -34,7 +34,16 @@ def inject_label_noise_vectorized(y: np.ndarray, noise_ratio: float, n_classes: 
     return y_noisy
 
 
-def process_and_split(X: np.ndarray, y: np.ndarray, noise_level: float, test_size=0.2, seed=42, target_dim: int = None) -> Tuple[TensorDataset, TensorDataset]:
+def permute_labels(y: np.ndarray, seed: int) -> np.ndarray:
+    """Memorization control: randomly permute the training labels with ``seed``.
+
+    The label marginal is kept but the labels become independent of the inputs.
+    Deterministic, so step 2 can rebuild exactly the labels a network trained on.
+    """
+    return np.random.default_rng(seed).permutation(y)
+
+
+def process_and_split(X: np.ndarray, y: np.ndarray, noise_level: float, test_size=0.2, seed=42, target_dim: int = None, shuffle_labels: bool = False) -> Tuple[TensorDataset, TensorDataset]:
     """Unified pipeline for splitting, PCA scaling, and noise injection."""
     # 1. Encode labels
     unique_classes = np.sort(np.unique(y))
@@ -49,6 +58,8 @@ def process_and_split(X: np.ndarray, y: np.ndarray, noise_level: float, test_siz
 
     # 3. Inject Noise (Training labels only)
     y_train = inject_label_noise_vectorized(y_train, noise_level, n_classes, seed)
+    if shuffle_labels:
+        y_train = permute_labels(y_train, seed)
 
     # 4. Dimensionality Reduction (PCA) - Fit ONLY on Train Data
     if target_dim is not None:
@@ -164,7 +175,8 @@ def get_new_data(dataset_name: str, noise: float = 0.0, batch_size: int = DEFAUL
     elif dataset_name == "composite":
         X, y = _make_composite_data(n_samples=N_SAMPLES, seed=split_seed)
         # We pass noise_level=0.0 to the pipeline since the feature noise is already baked into the shapes
-        train_ds, test_ds = process_and_split(X, y, noise_level=noise, seed=split_seed, target_dim=target_dim)
+        train_ds, test_ds = process_and_split(X, y, noise_level=noise, seed=split_seed, target_dim=target_dim,
+                                              shuffle_labels=kwargs.get("permute_labels", False))
 
     # --- Standard Vision Datasets (Modified for Eager PCA Support) ---
     elif dataset_name in ["mnist", "mnist_minimal", "mnist_minimal_random"]:
@@ -255,7 +267,8 @@ def get_new_data(dataset_name: str, noise: float = 0.0, batch_size: int = DEFAUL
     # --- UCI Datasets ---
     elif dataset_name == "wbc":
         X, y = _load_uci(id=17, target_col="Diagnosis", target_val="M")
-        train_ds, test_ds = process_and_split(X, y, noise_level=noise, seed=split_seed, target_dim=target_dim)
+        train_ds, test_ds = process_and_split(X, y, noise_level=noise, seed=split_seed, target_dim=target_dim,
+                                              shuffle_labels=kwargs.get("permute_labels", False))
         
     elif dataset_name == "wine":
         X, y = _load_uci(id=109)

@@ -17,6 +17,7 @@ figures/
 logs/
 smoke/
 configs/composite_label_noise/
+configs/label_permutation/
 configs/wbc_label_noise/
 configs/mnist_capacity/
 

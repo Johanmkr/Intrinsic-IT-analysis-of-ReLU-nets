@@ -113,6 +113,8 @@ def run(config_path, overwrite=False):
         dataset_kwargs["n_features"] = config["n_features"]
     if "target_dim" in config:
         dataset_kwargs["target_dim"] = config["target_dim"]
+    if config.get("permute_labels"):
+        dataset_kwargs["permute_labels"] = True
     
     print(f"Loading {dataset_name}...")
     train_loader, test_loader = get_new_data(
@@ -155,8 +157,11 @@ def run(config_path, overwrite=False):
 
     # 4. Setup HDF5 Incremental Writer
     print(f"Initializing HDF5 file at {h5_path}...")
-    
-    with h5py.File(h5_path, 'w') as f:
+
+    # Written under a temporary name and renamed when complete, so an
+    # interrupted run never leaves a partial seed_<s>.h5 that looks finished.
+    tmp_path = h5_path.with_name(h5_path.name + ".tmp")
+    with h5py.File(tmp_path, 'w') as f:
         # A. Save Config Metadata
         meta_grp = f.create_group('metadata')
         config['inferred_input_size'] = input_size
@@ -234,7 +239,7 @@ def run(config_path, overwrite=False):
         f.create_dataset("points", data=np.concatenate(all_points, axis=0))
         f.create_dataset("labels", data=np.concatenate(all_labels, axis=0))
         
-        # Save test dataloader to the file 
+    tmp_path.replace(h5_path)
     print("Experiment complete.")
 
 if __name__ == "__main__":

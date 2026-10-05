@@ -8,11 +8,17 @@ to the HDF5 (``routing_seed_<s>_<protocol>.csv``); existing ones are skipped
 unless ``--force``. ``--aggregate`` concatenates them into
 ``results/routing_<sweep>.csv`` and writes ``results/provenance.json``.
 
-Protocols:
+Protocols (``protocol`` column):
   heldout   the test split stored in the HDF5 (never trained on):
             Composite N=2000, WBC N=114, MNIST N=10000.
   insample  every point of the dataset, train split followed by the test
             split (Composite N=10000, WBC N=569). Not run for MNIST.
+  train     the train split only (label-permutation sweep).
+
+Labels (``labels`` column): ``true_labels`` everywhere; for the
+label-permutation sweep also ``train_labels``, the permuted labels the network
+was trained on (train protocol only), which shows how much of them the routing
+memorised.
 
 Usage:
     python run_estimate.py [--sweeps ...] [--workers N] [--force]
@@ -38,6 +44,7 @@ import numpy as np
 import pandas as pd
 
 from src_experiment import smoke
+from src_experiment.dataset import permute_labels
 from src_experiment.functional_quotient import DEFAULT_EPSILONS, FunctionalQuotientEstimator
 from src_experiment.probe_loader import make_composite_insample, make_wbc_probe
 
@@ -45,24 +52,34 @@ REPO = Path(__file__).resolve().parent
 OUTPUTS = REPO / "outputs"
 RESULTS = REPO / "results"
 
+# (protocol, labels) jobs per network of each sweep.
 SWEEP_PROTOCOLS = {
-    "composite_label_noise": ("heldout", "insample"),
-    "wbc_label_noise": ("heldout", "insample"),
-    "mnist_capacity": ("heldout",),
+    "composite_label_noise": (("heldout", "true_labels"), ("insample", "true_labels")),
+    "wbc_label_noise": (("heldout", "true_labels"), ("insample", "true_labels")),
+    "mnist_capacity": (("heldout", "true_labels"),),
+    "label_permutation": (("heldout", "true_labels"), ("insample", "true_labels"),
+                          ("train", "true_labels"), ("train", "train_labels")),
 }
 
 
-def _probe(dataset: str, protocol: str, global_seed: int):
-    """(X, y) for a protocol, or (None, None) for the HDF5's stored test split."""
+def _insample(dataset: str, global_seed: int):
+    if dataset == "composite":
+        return make_composite_insample(global_seed)
+    if dataset == "wbc":
+        return make_wbc_probe(global_seed=global_seed, mode="full")
+    raise ValueError(f"no in-sample protocol for {dataset!r}")
+
+
+def _probe(dataset: str, protocol: str, labels: str, global_seed: int, n_test: int):
+    """(X, y) for a job, or (None, None) for the HDF5's stored test split."""
     if protocol == "heldout":
         return None, None
-    if dataset == "composite":
-        p = make_composite_insample(global_seed)
-    elif dataset == "wbc":
-        p = make_wbc_probe(global_seed=global_seed, mode="full")
-    else:
-        raise ValueError(f"no in-sample protocol for {dataset!r}")
-    return p.X_probe, p.y_probe
+    p = _insample(dataset, global_seed)
+    if protocol == "insample":
+        return p.X_probe, p.y_probe
+    X, y = p.X_probe[:-n_test], p.y_probe[:-n_test]  # train split
+    # process_and_split permutes the train labels with the data seed.
+    return X, (permute_labels(y, global_seed) if labels == "train_labels" else y)
 
 
 def discover_jobs(sweeps: List[str]) -> List[dict]:
@@ -78,18 +95,22 @@ def discover_jobs(sweeps: List[str]) -> List[dict]:
                 "target_dim": int(a.get("target_dim", -1)),
                 "noise_level": float(a.get("noise", 0.0)),
                 "global_seed": int(a.get("global_seed", 42)),
+                "permute_labels": str(a.get("permute_labels", False)) == "True",
             }
-            for protocol in SWEEP_PROTOCOLS[sweep]:
-                jobs.append({**meta, "protocol": protocol, "h5": h5,
-                             "csv": h5.with_name(f"routing_{h5.stem}_{protocol}.csv")})
+            for protocol, labels in SWEEP_PROTOCOLS[sweep]:
+                name = protocol if labels == "true_labels" else f"{protocol}_{labels}"
+                jobs.append({**meta, "protocol": protocol, "labels": labels, "h5": h5,
+                             "csv": h5.with_name(f"routing_{h5.stem}_{name}.csv")})
     return jobs
 
 
 def run_one(job: dict, epsilons: List[float]) -> float:
     t0 = time.perf_counter()
-    X, y = _probe(job["dataset"], job["protocol"], job["global_seed"])
-    df = FunctionalQuotientEstimator(job["h5"]).evaluate_all(X=X, y=y, epsilons=epsilons)
-    for key in ("sweep", "dataset", "arch_str", "target_dim", "noise_level", "protocol"):
+    est = FunctionalQuotientEstimator(job["h5"])
+    X, y = _probe(job["dataset"], job["protocol"], job["labels"], job["global_seed"], len(est.labels))
+    df = est.evaluate_all(X=X, y=y, epsilons=epsilons)
+    for key in ("sweep", "dataset", "arch_str", "target_dim", "noise_level", "permute_labels",
+                "protocol", "labels"):
         df.insert(0, key, job[key])
     tmp = job["csv"].with_suffix(".tmp")
     df.to_csv(tmp, index=False)
@@ -98,7 +119,8 @@ def run_one(job: dict, epsilons: List[float]) -> float:
 
 
 def _tag(job: dict) -> str:
-    return f"{job['h5'].parent.parent.name}/{job['h5'].parent.name}/{job['h5'].stem}/{job['protocol']}"
+    return (f"{job['h5'].parent.parent.name}/{job['h5'].parent.name}/{job['h5'].stem}/"
+            f"{job['protocol']}/{job['labels']}")
 
 
 def run_jobs(jobs: List[dict], epsilons: List[float], workers: int, force: bool) -> int:
@@ -106,8 +128,8 @@ def run_jobs(jobs: List[dict], epsilons: List[float], workers: int, force: bool)
     print(f"{len(jobs)} jobs, {len(jobs) - len(todo)} already done, running {len(todo)} "
           f"on {workers} worker(s)", flush=True)
     # Build the in-sample sets once here; forked workers inherit the caches.
-    for dataset, protocol, seed in {(j["dataset"], j["protocol"], j["global_seed"]) for j in todo}:
-        _probe(dataset, protocol, seed)
+    for dataset, seed in {(j["dataset"], j["global_seed"]) for j in todo if j["protocol"] != "heldout"}:
+        _insample(dataset, seed)
     t0, failed = time.perf_counter(), 0
     with ProcessPoolExecutor(max_workers=workers) as pool:
         futures = {pool.submit(run_one, j, epsilons): j for j in todo}
@@ -139,7 +161,14 @@ def aggregate(sweeps: List[str]) -> None:
         if missing:
             print(f"[warn] {sweep}: {len(missing)} of {len(jobs)} jobs have no CSV, e.g. {missing[0]}",
                   file=sys.stderr)
-        frames = [pd.read_csv(j["csv"]) for j in jobs if j["csv"].exists()]
+        frames = []
+        for j in jobs:
+            if j["csv"].exists():
+                f = pd.read_csv(j["csv"])
+                # CSVs from before the labels column existed are true-label, unpermuted.
+                f["labels"] = f.get("labels", j["labels"])
+                f["permute_labels"] = f.get("permute_labels", j["permute_labels"])
+                frames.append(f)
         if not frames:
             continue
         df = pd.concat(frames, ignore_index=True)
@@ -158,7 +187,7 @@ def aggregate(sweeps: List[str]) -> None:
         "git_commit": _git("rev-parse", "HEAD"),
         "git_dirty": bool(_git("status", "--porcelain")),
         "smoke": smoke.SMOKE,
-        "protocols": {s: list(SWEEP_PROTOCOLS[s]) for s in sweeps},
+        "jobs_per_network": {s: [f"{p}/{l}" for p, l in SWEEP_PROTOCOLS[s]] for s in sweeps},
         "python": platform.python_version(),
         "numpy": np.__version__,
         "pandas": pd.__version__,

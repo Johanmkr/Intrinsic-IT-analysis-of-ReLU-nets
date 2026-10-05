@@ -8,9 +8,11 @@ import pandas as pd
 DEFAULT_PROTOCOL = "heldout"
 
 
-def load_routing(results_dir: Path, sweep: str, protocol: str = DEFAULT_PROTOCOL) -> pd.DataFrame:
-    """Routing-MI rows of one sweep, restricted to one estimation protocol."""
+def load_routing(results_dir: Path, sweep: str, protocol: str = DEFAULT_PROTOCOL,
+                 labels: str = "true_labels") -> pd.DataFrame:
+    """Routing-MI rows of one sweep for one estimation protocol and label set."""
     df = pd.read_csv(Path(results_dir) / f"routing_{sweep}.csv")
-    if protocol not in set(df["protocol"]):
-        raise ValueError(f"routing_{sweep}.csv has no {protocol!r} rows")
-    return df[df["protocol"] == protocol].reset_index(drop=True)
+    keep = (df["protocol"] == protocol) & (df["labels"] == labels)
+    if not keep.any():
+        raise ValueError(f"routing_{sweep}.csv has no protocol={protocol!r}, labels={labels!r} rows")
+    return df[keep].reset_index(drop=True)
