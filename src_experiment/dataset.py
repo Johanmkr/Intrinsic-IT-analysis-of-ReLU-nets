@@ -8,6 +8,7 @@ from sklearn.model_selection import train_test_split
 from ucimlrepo import fetch_ucirepo
 from typing import Tuple, Dict, Callable
 from torchvision import datasets, transforms
+from src_experiment.smoke import SMOKE
 
 N_SAMPLES = 10000
 DEFAULT_BATCH_SIZE = 32
@@ -177,21 +178,17 @@ def get_new_data(dataset_name: str, noise: float = 0.0, batch_size: int = DEFAUL
         y_train = train_data.targets.numpy()
         y_test = test_data.targets.numpy()
         
-        # --- NEW: DOWNSAMPLE TO 1/4 SIZE ---
-        print("📉 Downsampling dataset to 25% of its original size...")
-        rng_subsample = np.random.default_rng(split_seed) # Ensures the exact same subset is chosen every run
-        
-        # Subsample Train (60k -> 15k)
-        train_idx = rng_subsample.choice(len(X_train), size=int(len(X_train) * 0.10), replace=False)
-        X_train = X_train[train_idx]
-        y_train = y_train[train_idx]
-        
-        # Subsample Test (10k -> 2.5k)
-        test_idx = rng_subsample.choice(len(X_test), size=int(len(X_test) * 0.10), replace=False)
-        X_test = X_test[test_idx]
-        y_test = y_test[test_idx]
-        # -----------------------------------
-        
+        # The paper uses the full 60k/10k MNIST split (App. C). Only ./run.sh smoke
+        # subsamples both splits to 10% to keep the smoke run short.
+        if SMOKE:
+            rng_subsample = np.random.default_rng(split_seed)
+            train_idx = rng_subsample.choice(len(X_train), size=int(len(X_train) * 0.10), replace=False)
+            X_train = X_train[train_idx]
+            y_train = y_train[train_idx]
+            test_idx = rng_subsample.choice(len(X_test), size=int(len(X_test) * 0.10), replace=False)
+            X_test = X_test[test_idx]
+            y_test = y_test[test_idx]
+
         # Apply the minimal downsampling (28x28 -> 7x7)
         if dataset_name in ["mnist_minimal", "mnist_minimal_random"]:
             X_train = torch.nn.functional.avg_pool2d(X_train.unsqueeze(1), kernel_size=4).squeeze(1)

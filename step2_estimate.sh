@@ -34,15 +34,10 @@ banner() { echo ""; echo "=== $1 ==="; echo ""; }
 # plus finer values needed for capacity-bars / rho-vs-eps plots.
 EPSILONS="0.0 0.1 0.2 0.3 0.4 0.5 1.0 2.0"
 
-# Composite probe/hold-out sizes (smaller in ./run.sh smoke).
-PROBE_ARGS="--composite-probe-size 20000 --composite-holdout-size 10000"
-[[ "${SMOKE:-0}" == 1 ]] && PROBE_ARGS="--composite-probe-size 2000 --composite-holdout-size 1000"
-
 # ── Composite + WBC routing MI ────────────────────────────────────────────────
 banner "Routing MI — composite" | tee -a "$LOG"
 $PYTHON run_label_noise_estimator.py \
     --datasets composite \
-    $PROBE_ARGS \
     --epsilons $EPSILONS \
     $FORCE 2>&1 | tee -a "$LOG"
 

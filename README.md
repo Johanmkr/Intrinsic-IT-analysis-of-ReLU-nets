@@ -96,12 +96,15 @@ Implements Recipes 1–3 from the paper via `src_experiment/functional_quotient.
 - **Recipe 3** (quotient MI): applies Recipe 1 to the ε-merged contingency
   table.
 
-Probe sets:
-- **Composite**: fresh draw of N=20 000 points (probe seed 1042), N=10 000
-  holdout (holdout seed 2042), both generated from the same 7-class synthetic
-  distribution and pushed through the training-time MinMaxScaler.
-- **WBC**: stored test set (N=114), same scaler as training.
-- **MNIST**: stored test set (N=1 000 — the training-time 10 % test subsample), already PCA-reduced and scaled.
+Probe sets (the stored test split of each training run, i.e. a held-out set):
+- **Composite**: the 20 % test split of the N = 10 000 dataset (N = 2 000).
+- **WBC**: the 20 % test split of the N = 569 dataset (N = 114).
+- **MNIST**: the standard MNIST test set (N = 10 000), PCA-reduced and scaled
+  with the training-set fit.
+
+`run_label_noise_estimator.py` can instead draw a fresh Composite probe
+(`--composite-probe-size`) or use all 569 WBC points (`--wbc-mode full`);
+the paper figures use neither.
 
 ε grid: `{0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 1.0, 2.0}`.
 
@@ -219,6 +222,5 @@ intrinsic_IT_analysis_of_relu_nets/
   Model seed (101–105) controls weight initialisation only. Both seeds are
   set independently across PyTorch, NumPy, and Python random.
 
-- **Probe independence.** For composite, the probe set (N=20 000) is a fresh
-  draw from the same generative distribution, distinct from the training and
-  test splits. This avoids any data-reuse artefact in the MI estimate.
+- **Probe independence.** All estimates use the stored 20 % test split
+  (Composite, WBC) or the MNIST test set, which the networks never trained on.
