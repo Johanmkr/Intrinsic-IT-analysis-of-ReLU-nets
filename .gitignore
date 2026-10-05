@@ -29,3 +29,7 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+
+# Own 
+PAPER_MAP.md
