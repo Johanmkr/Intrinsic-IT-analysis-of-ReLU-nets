@@ -24,22 +24,27 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 import yaml
 
 REPO = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO))
+
+from src_experiment import smoke  # noqa: E402
+
 CONFIG_ROOT = REPO / "configs" / "mnist_capacity"
 
 ARCHS_A = [[3, 3, 3], [5, 5, 5]]
 DIMS_A = [10]
 
 ARCHS_B = [[7, 7, 7], [15, 15, 15], [25, 25, 25], [50, 50, 50]]
-DIMS_B = [2, 3, 4, 5, 10, 15, 20]
+DIMS_B = smoke.MNIST_DIMS_B
 
-SEEDS = [101, 102, 103, 104, 105]
+SEEDS = smoke.SEEDS
 
-EPOCHS = 151
+EPOCHS = smoke.EPOCHS
 BATCH_SIZE = 32
 LR = 0.001
 MOMENTUM = 0.9

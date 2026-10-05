@@ -28,13 +28,14 @@ sys.path.insert(0, str(REPO))
 
 from src_experiment.baselines.activations import load_layer_activations
 from src_experiment.baselines.mi_baselines import binning_mi, kmeans_mi, ksg_mi
+from src_experiment import smoke
 
 TARGET_DIM = 10
-EPOCH = 150
+EPOCH = smoke.LAST_EPOCH
 LAYERS = [1, 2, 3]   # all hidden layers for 3-hidden-layer nets
 NUM_CLASSES = 10      # MNIST
 ARCHS = ["[3, 3, 3]", "[5, 5, 5]", "[7, 7, 7]"]
-SEEDS = [101, 102, 103, 104, 105]
+SEEDS = smoke.SEEDS
 BASE_DIR = REPO / "outputs" / "mnist_capacity"
 OUT_CSV = REPO / "results" / "mnist_fc_baselines.csv"
 

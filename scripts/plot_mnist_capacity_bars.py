@@ -28,12 +28,12 @@ sys.path.append(str(project_root))
 
 from src_experiment.utils import savefig
 from src_experiment.paths import neurips_figpath
+from src_experiment.smoke import LAST_EPOCH
 
 REPO        = Path(__file__).resolve().parents[1]
 RESULTS_DIR = REPO / "results"
 FIGURES_DIR = REPO / "figures"
 
-LAST_EPOCH       = 150
 TARGET_LAST_LAYER = 3
 H_Y_MNIST        = 3.319
 

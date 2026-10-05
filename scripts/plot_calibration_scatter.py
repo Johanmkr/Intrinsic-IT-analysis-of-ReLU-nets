@@ -29,12 +29,13 @@ sys.path.append(str(project_root))
 
 from src_experiment.utils import savefig
 from src_experiment.paths import neurips_figpath
+from src_experiment.smoke import LAST_EPOCH
 
 REPO = Path(__file__).resolve().parents[1]
 RESULTS = REPO / "results"
 FIGURES = REPO / "figures"
 
-LAST_EPOCH_BY_DATASET = {"composite": 150, "wbc": 150}
+LAST_EPOCH_BY_DATASET = {"composite": LAST_EPOCH, "wbc": LAST_EPOCH}
 DATASETS = ["composite", "wbc"]
 
 DATASET_COLOUR = {
@@ -56,7 +57,7 @@ ARCHS_C = [
 
 ARCHS_MNIST_FC = ["[3, 3, 3]", "[5, 5, 5]", "[7, 7, 7]"]
 MNIST_FC_TARGET_DIM = 10
-MNIST_FC_EPOCH = 150
+MNIST_FC_EPOCH = LAST_EPOCH
 MNIST_FC_LAYER = 3
 MNIST_FC_EPS = 1.0
 

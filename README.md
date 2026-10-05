@@ -1,4 +1,4 @@
-# Paper Reproduction
+# Intrinsic Information Theoretic Analysis of ReLU Nets — code
 
 End-to-end pipeline to reproduce all six figures in the NeurIPS 2026 paper.
 Everything runs from this directory; no Julia, no geometric-tree computation.
@@ -7,27 +7,29 @@ Everything runs from this directory; no Julia, no geometric-tree computation.
 
 ## Requirements
 
-- Python ≥ 3.12 with [uv](https://github.com/astral-sh/uv) installed.
-- Run from the repo root once to install the environment:
-  ```bash
-  uv sync
-  ```
-- The test suite (`uv run pytest`) additionally needs the step-1 outputs (`outputs/`) and the
-  figure-1 weight cache (`.cache/`); the `parx` dev dependency comes from `uv sync`.
-- Internet access is required on the **first run** only: `dataset.py` fetches
-  UCI datasets (WBC) and downloads MNIST via torchvision.
+- Python ≥ 3.12 with [uv](https://github.com/astral-sh/uv) installed. No GPU and no Julia.
+- Internet access on the **first run** only: WBC is fetched from the UCI repository and
+  MNIST is downloaded via torchvision (`./run.sh setup` does the download up front).
+- The rebuttal's extra bias corrections (Exp 10) need `infomeasure`, which is AGPL-3.0
+  and therefore not part of the default install: `uv sync --group rebuttal`.
 
 ---
 
 ## Quick start
 
 ```bash
-chmod +x run_all.sh step1_train.sh step2_estimate.sh step3_baselines.sh step4_plot.sh
-./run_all.sh
+./run.sh setup     # uv sync + download MNIST into data/
+./run.sh smoke     # whole pipeline on a tiny sweep in smoke/ (~5 min) — checks the code runs
+./run.sh all       # full pipeline → figures/ (6–8 h on a multi-core CPU)
+./run.sh test      # unit tests on the smoke checkpoints (~4 min); --full: on outputs/
 ```
 
-Figures appear in `figures/`. Estimated total wall time: **6–8 hours** on a
-modern multi-core CPU (dominated by training 210 models in step 1).
+`./run.sh step1` … `./run.sh step4` run single steps; `all` and the steps accept `--force`
+to recompute. Wall time is dominated by training 210 models in step 1.
+
+The smoke run uses one seed, 11 epochs and PCA dims {2, 10} (`src_experiment/smoke.py`)
+and writes everything under `smoke/`, never touching `outputs/`, `results/` or `figures/`.
+Its figures only show that the code runs; they are not the paper's figures.
 
 ---
 
@@ -149,9 +151,10 @@ All figures are written to `figures/` as both `.pdf` and `.png`.
 ## File structure
 
 ```
-paper_reproduction/
+intrinsic_IT_analysis_of_relu_nets/
 ├── README.md                      ← this file
-├── run_all.sh                     ← run everything end-to-end
+├── run.sh                         ← entry point (setup/test/smoke/all/stepN)
+├── run_all.sh                     ← steps 1–4 end-to-end
 ├── step1_train.sh                 ← train 210 models
 ├── step2_estimate.sh              ← compute routing MI
 ├── step3_baselines.sh             ← compute MI baselines
@@ -187,6 +190,7 @@ paper_reproduction/
 │   ├── rtg_analyzer.py            ← RTG (routing topology graph) diagnostics
 │   ├── rtg_overlap.py             ← routing-loss proxy
 │   ├── paths.py                   ← figure output path (→ figures/)
+│   ├── smoke.py                   ← seeds/epochs/PCA dims (full vs ./run.sh smoke)
 │   └── baselines/
 │       ├── activations.py         ← forward-pass activation extraction
 │       └── mi_baselines.py        ← binning / k-means / KSG estimators

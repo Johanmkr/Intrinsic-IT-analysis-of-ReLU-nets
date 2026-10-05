@@ -10,9 +10,12 @@ Checks, per plan section:
   2c  parx local_affine matrices equal the repo's compute_active_subnetwork
       (tilde_A, tilde_c) per routed region.
   2d  exact parx partitions dominate repo grid counts: full partition
-      size >= fixed layer-3 baselines at epoch 150, and per-layer cumulative
+      size >= layer-3 baselines at the last epoch, and per-layer cumulative
       counts >= 400x400-grid counts for every composite epoch.
   2e  Julia-backed parx methods are skipped cleanly when Julia is absent.
+
+Checkpoints: ``./run.sh test`` sets SMOKE=1 and reads the ``./run.sh smoke``
+outputs under smoke/; ``./run.sh test --full`` reads the step-1 outputs/.
 
 parx operates on hidden layers only (weights/biases lists exclude the output
 layer l{L+1}); activation_path / regions_at_layer index hidden layers 1..L.
@@ -50,14 +53,22 @@ from src_experiment.routing_estimator import (  # noqa: E402
     forward_activation_patterns,
 )
 from src_experiment.functional_quotient import compute_active_subnetwork  # noqa: E402
+from src_experiment.smoke import LAST_EPOCH, SMOKE  # noqa: E402
 
-COMPOSITE_H5 = REPO_ROOT / "outputs/composite_label_noise/n0.0_[5, 5, 5]/seed_101.h5"
-MNIST_777_H5 = REPO_ROOT / "outputs/mnist_capacity/2_dim_[7, 7, 7]/seed_101.h5"
-MNIST_151515_H5 = REPO_ROOT / "outputs/mnist_capacity/2_dim_[15, 15, 15]/seed_101.h5"
-MNIST_10DIM_H5 = REPO_ROOT / "outputs/mnist_capacity/10_dim_[3, 3, 3]/seed_101.h5"
-FIG1_WEIGHTS = REPO_ROOT / ".cache/figure1_pedagogy_weights.pt"
+DATA_ROOT = REPO_ROOT / "smoke" if SMOKE else REPO_ROOT
+COMPOSITE_H5 = DATA_ROOT / "outputs/composite_label_noise/n0.0_[5, 5, 5]/seed_101.h5"
+MNIST_777_H5 = DATA_ROOT / "outputs/mnist_capacity/2_dim_[7, 7, 7]/seed_101.h5"
+MNIST_151515_H5 = DATA_ROOT / "outputs/mnist_capacity/2_dim_[15, 15, 15]/seed_101.h5"
+MNIST_10DIM_H5 = DATA_ROOT / "outputs/mnist_capacity/10_dim_[3, 3, 3]/seed_101.h5"
+FIG1_WEIGHTS = DATA_ROOT / ".cache/figure1_pedagogy_weights.pt"
 
-COMPOSITE_EPOCH = 150
+# Layer-3 region counts of the full-run checkpoints at epoch 150. The smoke
+# checkpoints differ, so there the repo's own count at the last epoch is used.
+FULL_BASELINES = {COMPOSITE_H5: 59, MNIST_777_H5: 235, MNIST_151515_H5: 643}
+
+_MISSING = f"needs {DATA_ROOT / 'outputs'}: run ./run.sh {'smoke' if SMOKE else 'step1'} first"
+needs_outputs = pytest.mark.skipif(not COMPOSITE_H5.exists(), reason=_MISSING)
+needs_fig1 = pytest.mark.skipif(not FIG1_WEIGHTS.exists(), reason=_MISSING)
 
 
 def load_epoch_state_dict(h5_path: Path, epoch: int, dtype=np.float64):
@@ -158,6 +169,7 @@ class TestHandcraftedExact:
             max_diff = max(max_diff, float(np.max(np.abs(A @ x + b - h1))))
         assert max_diff < 1e-9
 
+    @needs_fig1
     def test_fig1_net(self):
         import torch
 
@@ -194,6 +206,7 @@ class TestHandcraftedExact:
         assert max_diff < 1e-9
 
 
+@needs_outputs
 class TestSparseVsRepo:
     @pytest.mark.parametrize("h5_path", [COMPOSITE_H5, MNIST_10DIM_H5])
     def test_sparse_matches_repo_routing(self, h5_path):
@@ -233,9 +246,10 @@ class TestSparseVsRepo:
             assert len(set(map(region_key, part.regions))) == len(part.regions)
 
 
+@needs_outputs
 class TestLocalAffineVsSubnetwork:
     def test_local_affine_equals_active_subnetwork(self):
-        sd = load_epoch_state_dict(COMPOSITE_H5, COMPOSITE_EPOCH, dtype=np.float64)
+        sd = load_epoch_state_dict(COMPOSITE_H5, LAST_EPOCH, dtype=np.float64)
         Ws, bs = weights_and_biases(sd)
         n_layers = len(Ws)
         points = load_points(COMPOSITE_H5).astype(np.float64)
@@ -246,7 +260,7 @@ class TestLocalAffineVsSubnetwork:
 
         # distinct routed regions must cover at least the repo's counted regions
         est = RoutingEstimator(str(COMPOSITE_H5))
-        n_repo = est.evaluate_epoch(COMPOSITE_EPOCH)[-1].num_regions
+        n_repo = est.evaluate_epoch(LAST_EPOCH)[-1].num_regions
         distinct = {region_key(r) for r in routed}
         assert len(distinct) >= n_repo
 
@@ -263,13 +277,15 @@ class TestLocalAffineVsSubnetwork:
             assert np.all(A[inactive] == 0.0)
 
 
+@needs_outputs
 class TestExactVsGrid:
-    @pytest.mark.parametrize(
-        "h5_path,baseline",
-        [(COMPOSITE_H5, 59), (MNIST_777_H5, 235), (MNIST_151515_H5, 643)],
-    )
-    def test_exact_dominates_grid_epoch_150(self, h5_path, baseline):
-        sd = load_epoch_state_dict(h5_path, COMPOSITE_EPOCH, dtype=np.float64)
+    @pytest.mark.parametrize("h5_path", [COMPOSITE_H5, MNIST_777_H5, MNIST_151515_H5])
+    def test_exact_dominates_grid_last_epoch(self, h5_path):
+        if SMOKE:
+            baseline = RoutingEstimator(str(h5_path)).evaluate_epoch(LAST_EPOCH)[-1].num_regions
+        else:
+            baseline = FULL_BASELINES[h5_path]
+        sd = load_epoch_state_dict(h5_path, LAST_EPOCH, dtype=np.float64)
         Ws, bs = weights_and_biases(sd)
         points = load_points(h5_path).astype(np.float64)
 
@@ -290,7 +306,7 @@ class TestExactVsGrid:
 
     def test_exact_dominates_grid_all_epochs(self):
         h5_path = COMPOSITE_H5
-        sd = load_epoch_state_dict(h5_path, COMPOSITE_EPOCH, dtype=np.float64)
+        sd = load_epoch_state_dict(h5_path, LAST_EPOCH, dtype=np.float64)
         Ws, bs = weights_and_biases(sd)
         n_layers = len(Ws)
         points = load_points(h5_path).astype(np.float64)

@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the paper below."
+title: "Intrinsic Information Theoretic Analysis of ReLU Nets — code"
+type: software
+license: MIT
+repository-code: "https://github.com/Johanmkr/Intrinsic_IT_analysis_of_ReLU_nets"
+authors:
+  - family-names: Mylius-Kroken
+    given-names: Johan
+    email: johan.m.kroken@uit.no
+    affiliation: "UiT The Arctic University of Norway"
+  - family-names: Wetzer
+    given-names: Elisabeth
+    affiliation: "UiT The Arctic University of Norway"
+  - family-names: Ramezani-Kebrya
+    given-names: Ali
+    affiliation: "University of Oslo"
+  - family-names: Jenssen
+    given-names: Robert
+    affiliation: "UiT The Arctic University of Norway"
+  - family-names: Wickstrøm
+    given-names: Kristoffer
+    affiliation: "UiT The Arctic University of Norway"
+preferred-citation:
+  type: conference-paper
+  title: "Intrinsic Information Theoretic Analysis of ReLU Nets"
+  authors:
+    - family-names: Mylius-Kroken
+      given-names: Johan
+    - family-names: Wetzer
+      given-names: Elisabeth
+    - family-names: Ramezani-Kebrya
+      given-names: Ali
+    - family-names: Jenssen
+      given-names: Robert
+    - family-names: Wickstrøm
+      given-names: Kristoffer
+  collection-title: "Advances in Neural Information Processing Systems (NeurIPS 2026)"
+  year: 2026

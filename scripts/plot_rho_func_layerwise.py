@@ -32,13 +32,13 @@ sys.path.append(str(project_root))
 
 from src_experiment.utils import savefig
 from src_experiment.paths import neurips_figpath
+from src_experiment.smoke import LAST_EPOCH
 
 REPO = Path(__file__).resolve().parents[1]
 RESULTS = REPO / "results"
 FIGURES = REPO / "figures"
 
 NOISE = 0.0
-LAST_EPOCH = 150
 
 ARCHS_FIVE = ["[5, 5, 5, 5, 5]", "[9, 9, 9, 9, 9]", "[25, 25, 25, 25, 25]"]
 ARCHS_MNIST = ["[5, 5, 5]", "[7, 7, 7]"]

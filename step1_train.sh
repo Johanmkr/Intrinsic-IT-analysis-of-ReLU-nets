@@ -33,7 +33,7 @@ $PYTHON configs/generate_wbc.py       | tee -a "$LOG"
 $PYTHON configs/generate_mnist.py     | tee -a "$LOG"
 
 # ── Composite label-noise sweep ───────────────────────────────────────────────
-banner "Training composite_label_noise (30 models)"
+banner "Training composite_label_noise"
 total=$(find configs/composite_label_noise -name "*.yaml" | wc -l)
 i=0
 while IFS= read -r cfg; do
@@ -52,7 +52,7 @@ print(pathlib.Path(c['output_dir']) / c['experiment_name'] / f\"seed_{c['model_s
 done < <(find configs/composite_label_noise -name "*.yaml" | sort)
 
 # ── WBC label-noise sweep ─────────────────────────────────────────────────────
-banner "Training wbc_label_noise (30 models)"
+banner "Training wbc_label_noise"
 total=$(find configs/wbc_label_noise -name "*.yaml" | wc -l)
 i=0
 while IFS= read -r cfg; do
@@ -71,7 +71,7 @@ print(pathlib.Path(c['output_dir']) / c['experiment_name'] / f\"seed_{c['model_s
 done < <(find configs/wbc_label_noise -name "*.yaml" | sort)
 
 # ── MNIST capacity sweep ──────────────────────────────────────────────────────
-banner "Training mnist_capacity (150 models)"
+banner "Training mnist_capacity"
 total=$(find configs/mnist_capacity -name "*.yaml" | wc -l)
 i=0
 while IFS= read -r cfg; do

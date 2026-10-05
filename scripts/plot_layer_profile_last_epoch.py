@@ -32,13 +32,13 @@ sys.path.append(str(project_root))
 
 from src_experiment.utils import savefig
 from src_experiment.paths import neurips_figpath
+from src_experiment.smoke import LAST_EPOCH
 
 REPO = Path(__file__).resolve().parents[1]
 RESULTS = REPO / "results"
 FIGURES = REPO / "figures"
 
 NOISE = 0.0
-LAST_EPOCH = 150
 EPS_FUNC = 1.0
 LAYERS_FIVE = [1, 2, 3, 4, 5]
 LAYERS_THREE = [1, 2, 3]

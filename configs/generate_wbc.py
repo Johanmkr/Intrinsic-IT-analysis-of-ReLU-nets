@@ -10,11 +10,16 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 import yaml
 
 REPO = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO))
+
+from src_experiment import smoke  # noqa: E402
+
 CONFIG_ROOT = REPO / "configs" / "wbc_label_noise"
 
 ARCHS = [
@@ -26,9 +31,9 @@ ARCHS = [
     [25, 25, 25, 25, 25],
 ]
 NOISE = 0.0
-SEEDS = [101, 102, 103, 104, 105]
+SEEDS = smoke.SEEDS
 
-EPOCHS = 151
+EPOCHS = smoke.EPOCHS
 BATCH_SIZE = 32
 LR = 0.001
 MOMENTUM = 0.9
