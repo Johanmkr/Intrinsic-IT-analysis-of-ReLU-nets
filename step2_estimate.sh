@@ -30,9 +30,9 @@ mkdir -p logs results
 
 banner() { echo ""; echo "=== $1 ==="; echo ""; }
 
-# ε grid used in the paper figures: covers ρ_func at 0, 0.1, 0.3, 0.5, 1.0, 2.0
-# plus finer values needed for capacity-bars / rho-vs-eps plots.
-EPSILONS="0.0 0.1 0.2 0.3 0.4 0.5 1.0 2.0"
+# ε grid of the submitted results (the estimators' DEFAULT_EPSILONS); the
+# ρ_func-vs-ε figure (Fig. 5) needs the fine steps between 0.5 and 1.5.
+EPSILONS="0.0 0.01 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.5 2.0"
 
 # ── Composite + WBC routing MI ────────────────────────────────────────────────
 banner "Routing MI — composite" | tee -a "$LOG"

@@ -14,9 +14,11 @@ the HDF5. Re-running skips files whose CSV exists; resumable.
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 import time
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 from typing import Iterable, List, Optional
 
@@ -84,37 +86,42 @@ def run_one(job: dict, epsilons: Iterable[float]) -> float:
     return time.perf_counter() - t0
 
 
+def _tag(job: dict) -> str:
+    return f"mnist/dim_{job['target_dim']}/{job['arch']}/seed_{job['seed']}"
+
+
 def run_jobs(jobs: List[dict], args: argparse.Namespace) -> None:
+    """Run the jobs on ``args.workers`` processes. Each job reads one HDF5 and
+    writes its own CSV, so results do not depend on the number of workers."""
     if args.limit is not None:
         jobs = jobs[: args.limit]
-    if not jobs:
+    total = len(jobs)
+    todo = []
+    for job in jobs:
+        if job["csv"].exists() and not args.force:
+            print(f"skip (exists): {_tag(job)}")
+        else:
+            todo.append(job)
+    if not todo:
         print("nothing to do")
         return
-    total = len(jobs)
-    cum = 0.0
-    done = 0
-    for i, job in enumerate(jobs, start=1):
-        tag = f"mnist/dim_{job['target_dim']}/{job['arch']}/seed_{job['seed']}"
-        if job["csv"].exists() and not args.force:
-            print(f"[{i}/{total}] skip (exists): {tag}")
-            continue
-        print(f"[{i}/{total}] running: {tag}")
-        try:
-            dt = run_one(job, args.epsilons)
-        except Exception as exc:
-            print(f"  -> FAILED: {exc!r}", file=sys.stderr)
-            continue
-        cum += dt
-        done += 1
-        avg = cum / done
-        eta = avg * (total - i)
-        print(
-            f"  -> {dt:6.2f}s  (avg {avg:.2f}s/job, "
-            f"ETA {eta/60:.1f} min over {total - i} remaining)"
-        )
-    print(f"\nfinished: {done} ran, {total - done} skipped/failed.")
-    if done:
-        print(f"total wall time: {cum/60:.2f} min, mean {cum/done:.2f}s/job.")
+    print(f"running {len(todo)} of {total} jobs on {args.workers} worker(s)", flush=True)
+    t0 = time.perf_counter()
+    done = failed = 0
+    with ProcessPoolExecutor(max_workers=args.workers) as pool:
+        futures = {pool.submit(run_one, job, args.epsilons): job for job in todo}
+        for fut in as_completed(futures):
+            job = futures[fut]
+            try:
+                dt = fut.result()
+            except Exception as exc:
+                failed += 1
+                print(f"FAILED: {_tag(job)}: {exc!r}", file=sys.stderr, flush=True)
+                continue
+            done += 1
+            print(f"[{done + failed}/{len(todo)}] {_tag(job)}: {dt:6.1f}s", flush=True)
+    print(f"\nfinished: {done} ran, {failed} failed, {total - len(todo)} skipped "
+          f"in {(time.perf_counter() - t0) / 60:.1f} min.")
 
 
 def aggregate(output: Path) -> None:
@@ -144,6 +151,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--epsilons", nargs="+", type=float, default=list(DEFAULT_EPSILONS),
                    help="ε grid for Recipe 2")
     p.add_argument("--limit", type=int, default=None)
+    p.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 1) - 2),
+                   help="parallel processes (default: #CPUs - 2)")
     p.add_argument("--force", action="store_true")
     p.add_argument("--list", action="store_true")
     p.add_argument("--aggregate", action="store_true")

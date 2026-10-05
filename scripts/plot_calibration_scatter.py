@@ -78,7 +78,11 @@ def _arch_depth(arch_str: str) -> int:
 
 def _load_composite_wbc() -> pd.DataFrame:
     bl = pd.read_csv(RESULTS / "mi_baselines.csv")
-    bl = bl[bl["dataset"].isin(DATASETS) & bl["arch_str"].isin(ARCHS_C)].copy()
+    # Clean-label networks only: the routing estimates below are noise 0, and the
+    # merge on (dataset, arch, seed) would otherwise pair them with baselines of
+    # label-noise networks.
+    bl = bl[bl["dataset"].isin(DATASETS) & bl["arch_str"].isin(ARCHS_C)
+            & (bl["noise_level"] == 0.0)].copy()
     bl["depth"] = bl["arch_str"].map(_arch_depth)
     keep = []
     for ds in DATASETS:
