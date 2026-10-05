@@ -37,6 +37,7 @@ Aggregate into results/mi_baselines.csv::
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 import time
 from pathlib import Path
@@ -49,7 +50,6 @@ import pandas as pd
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 
-from run_label_noise_estimator import DATASETS, discover_jobs  # noqa: E402
 from src_experiment.baselines.activations import load_activations_dispatch  # noqa: E402
 from src_experiment.baselines.mi_baselines import (  # noqa: E402
     InfoNCEEstimator,
@@ -122,37 +122,65 @@ def _h5_summary(h5_path: Path) -> dict:
     }
 
 
-def _crossref_existing(h5_path: Path, epoch: int, layer: int) -> dict:
-    """Pick the routing-information estimator outputs from the existing
-    ``new_estimator_<seed>.csv`` if one exists. Returns empty dict if not.
+OUTPUTS = REPO / "outputs"
 
-    Surfaces both the **plug-in** (``bits_ours_plugin`` / ``bits_ours_func_plugin``)
-    and the **Miller-Madow corrected** (``bits_ours_raw`` /
-    ``bits_ours_func``) variants, so the baseline figure can compare both.
-    Joins on (epoch, layer); for the functional column we take the smallest
-    non-zero ε row.
-    """
-    csv = h5_path.with_name(f"new_estimator_{h5_path.stem}.csv")
-    if not csv.exists():
-        return {}
-    df = pd.read_csv(csv)
-    sub = df[(df["epoch"] == epoch) & (df["layer"] == layer)]
-    if sub.empty:
-        return {}
-    raw = sub.iloc[0]
-    out = {
-        "bits_ours_plugin": float(raw["plug_in_bits"]),
-        "bits_ours_raw": float(raw["miller_madow_bits"]),
-        "rho": float(raw["rho"]),
-    }
-    func_rows = sub[sub["epsilon"] > 0]
-    if not func_rows.empty:
-        f = func_rows.sort_values("epsilon").iloc[0]
-        out["bits_ours_func_plugin"] = float(f["plug_in_func_bits"])
-        out["bits_ours_func"] = float(f["miller_madow_func_bits"])
-        out["rho_func"] = float(f["rho_func"])
-        out["epsilon_for_ours_func"] = float(f["epsilon"])
-    return out
+DATASETS = {
+    "composite": OUTPUTS / "composite_label_noise",
+    "wbc": OUTPUTS / "wbc_label_noise",
+    "mnist_full_lenet": OUTPUTS / "mnist_full_lenet",
+}
+
+# Filename pattern: ``n0.2_[25, 25, 25]`` (MLP) or ``n0.0_LeNet-XS`` (CNN).
+# arch group accepts either a bracketed list or a hyphenated identifier.
+_DIR_RE = re.compile(r"^n(?P<noise>[0-9.]+)_(?P<arch>.+)$")
+_SEED_RE = re.compile(r"^seed_(?P<seed>\d+)\.h5$")
+
+
+# ---------------------------------------------------------------------------
+# Job discovery
+# ---------------------------------------------------------------------------
+def discover_jobs(
+    datasets: Iterable[str],
+    noise_filter: Optional[Iterable[float]] = None,
+    arch_filter: Optional[Iterable[str]] = None,
+    seed_filter: Optional[Iterable[int]] = None,
+) -> List[dict]:
+    """Walk dataset roots and return a sorted, deterministic job list."""
+    jobs: List[dict] = []
+    for ds in datasets:
+        root = DATASETS[ds]
+        if not root.is_dir():
+            print(f"[warn] dataset root missing: {root}", file=sys.stderr)
+            continue
+        for cfg_dir in sorted(root.iterdir()):
+            if not cfg_dir.is_dir():
+                continue
+            m = _DIR_RE.match(cfg_dir.name)
+            if not m:
+                continue
+            noise = float(m.group("noise"))
+            arch = m.group("arch")
+            if noise_filter is not None and noise not in noise_filter:
+                continue
+            if arch_filter is not None and arch not in arch_filter:
+                continue
+            for h5 in sorted(cfg_dir.glob("seed_*.h5")):
+                ms = _SEED_RE.match(h5.name)
+                if not ms:
+                    continue
+                seed = int(ms.group("seed"))
+                if seed_filter is not None and seed not in seed_filter:
+                    continue
+                jobs.append(
+                    {
+                        "dataset": ds,
+                        "noise": noise,
+                        "arch": arch,
+                        "seed": seed,
+                        "h5": h5,
+                    }
+                )
+    return jobs
 
 
 # ---------------------------------------------------------------------------
@@ -252,7 +280,6 @@ def _evaluate_cell(
         row["mine_seeds"] = args.mine_seeds
 
     # Cross-ref to existing new-estimator CSV (no-op if missing).
-    row.update(_crossref_existing(h5_path, epoch, layer))
 
     return row
 

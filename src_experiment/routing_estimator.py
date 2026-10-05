@@ -197,13 +197,16 @@ class RoutingEstimator:
                 int(k.split("_")[1]) for k in f["epochs"].keys() if k.startswith("epoch_")
             )
 
-    def _load_weights(self, epoch: int) -> Tuple[List[np.ndarray], List[np.ndarray]]:
-        """Return hidden-layer (W, b) lists; output layer is excluded."""
+    def _load_weights(
+        self, epoch: int, include_output: bool = False
+    ) -> Tuple[List[np.ndarray], List[np.ndarray]]:
+        """Return hidden-layer (W, b) lists, plus the output layer if requested."""
+        n_layers = self.num_hidden_layers + int(include_output)
         with h5py.File(self.h5_path, "r") as f:
             grp = f[f"epochs/epoch_{epoch}"]
             W: List[np.ndarray] = []
             b: List[np.ndarray] = []
-            for i in range(1, self.num_hidden_layers + 1):
+            for i in range(1, n_layers + 1):
                 W.append(np.asarray(grp[f"l{i}.weight"][:], dtype=np.float32))
                 b.append(np.asarray(grp[f"l{i}.bias"][:], dtype=np.float32))
         return W, b

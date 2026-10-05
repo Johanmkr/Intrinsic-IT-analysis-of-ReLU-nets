@@ -1,26 +1,34 @@
 #!/usr/bin/env bash
-# Step 2 — Run the routing-information estimator (Recipe 1 + 2 + 3).
+# Step 2 — Routing information of every trained network (run_estimate.py).
 #
-# Reads the HDF5 checkpoints from step1_train.sh and writes per-experiment
-# CSVs next to each .h5 file, then aggregates into results/*.csv.
+# For every HDF5 from step1_train.sh and every protocol (held-out test split;
+# plus in-sample for Composite and WBC), computes raw and ε-quotient routing MI
+# with all estimators (plug-in, Miller–Madow, Grassberger, Chao–Shen,
+# Chao–Wang–Jost, ANSB) at every saved epoch and hidden layer, for the 15 ε
+# values in src_experiment/functional_quotient.py.
 #
-# Output CSVs:
-#   results/composite_label_noise_new_estimator.csv
-#   results/wbc_label_noise_new_estimator.csv
-#   results/mnist_capacity_new_estimator.csv
+# Output:
+#   outputs/<sweep>/<experiment>/routing_seed_<s>_<protocol>.csv   (per job)
+#   results/routing_{composite_label_noise,wbc_label_noise,mnist_capacity}.csv
+#   results/provenance.json                                         (git commit, settings)
 #
-# Already-computed per-HDF5 CSVs are skipped (resumable).
+# Already-computed jobs are skipped (resumable).
 #
 # Usage:
-#   ./step2_estimate.sh           # run all, skip already-done
-#   ./step2_estimate.sh --force   # recompute everything
+#   ./step2_estimate.sh                # run all, skip already-done
+#   ./step2_estimate.sh --force        # recompute everything
+#   ./step2_estimate.sh --workers 8    # limit parallelism (default: #CPUs − 2)
 
 set -euo pipefail
 cd "$(dirname "$0")"
 
-FORCE=""
-for arg in "$@"; do
-  [[ "$arg" == "--force" ]] && FORCE="--force"
+ARGS=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --force) ARGS+=(--force); shift ;;
+    --workers) ARGS+=(--workers "$2"); shift 2 ;;
+    *) shift ;;
+  esac
 done
 
 PYTHON="uv run python"
@@ -28,62 +36,15 @@ TS=$(date +"%Y%m%d_%H%M%S")
 LOG="logs/step2_estimate_${TS}.log"
 mkdir -p logs results
 
+# One BLAS thread per worker process; parallelism comes from the workers.
+export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
+
 banner() { echo ""; echo "=== $1 ==="; echo ""; }
 
-# ε grid of the submitted results (the estimators' DEFAULT_EPSILONS); the
-# ρ_func-vs-ε figure (Fig. 5) needs the fine steps between 0.5 and 1.5.
-EPSILONS="0.0 0.01 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.5 2.0"
+banner "Routing MI — all sweeps and protocols" | tee -a "$LOG"
+$PYTHON run_estimate.py "${ARGS[@]}" 2>&1 | tee -a "$LOG"
 
-# ── Composite + WBC routing MI ────────────────────────────────────────────────
-banner "Routing MI — composite" | tee -a "$LOG"
-$PYTHON run_label_noise_estimator.py \
-    --datasets composite \
-    --epsilons $EPSILONS \
-    $FORCE 2>&1 | tee -a "$LOG"
-
-banner "Routing MI — WBC" | tee -a "$LOG"
-$PYTHON run_label_noise_estimator.py \
-    --datasets wbc \
-    --epsilons $EPSILONS \
-    $FORCE 2>&1 | tee -a "$LOG"
-
-# ── Aggregate label-noise CSVs ────────────────────────────────────────────────
-banner "Aggregating composite CSV" | tee -a "$LOG"
-$PYTHON run_label_noise_estimator.py \
-    --aggregate --output results/composite_label_noise_new_estimator.csv \
-    --datasets composite 2>&1 | tee -a "$LOG"
-# Filter to composite rows only
-uv run python -c "
-import pandas as pd
-df = pd.read_csv('results/composite_label_noise_new_estimator.csv')
-df[df['dataset'] == 'composite'].to_csv(
-    'results/composite_label_noise_new_estimator.csv', index=False)
-print(f'composite: {len(df[df[\"dataset\"]==\"composite\"])} rows')
-" 2>&1 | tee -a "$LOG"
-
-banner "Aggregating WBC CSV" | tee -a "$LOG"
-$PYTHON run_label_noise_estimator.py \
-    --aggregate --output results/wbc_label_noise_new_estimator.csv \
-    --datasets wbc 2>&1 | tee -a "$LOG"
-uv run python -c "
-import pandas as pd
-df = pd.read_csv('results/wbc_label_noise_new_estimator.csv')
-df[df['dataset'] == 'wbc'].to_csv(
-    'results/wbc_label_noise_new_estimator.csv', index=False)
-print(f'wbc: {len(df[df[\"dataset\"]==\"wbc\"])} rows')
-" 2>&1 | tee -a "$LOG"
-
-# ── MNIST capacity routing MI ─────────────────────────────────────────────────
-banner "Routing MI — MNIST capacity" | tee -a "$LOG"
-$PYTHON run_mnist_capacity_estimator.py \
-    --epsilons $EPSILONS \
-    $FORCE 2>&1 | tee -a "$LOG"
-
-banner "Aggregating MNIST capacity CSV" | tee -a "$LOG"
-$PYTHON run_mnist_capacity_estimator.py \
-    --aggregate --output results/mnist_capacity_new_estimator.csv \
-    2>&1 | tee -a "$LOG"
+banner "Aggregating" | tee -a "$LOG"
+$PYTHON run_estimate.py --aggregate 2>&1 | tee -a "$LOG"
 
 banner "Step 2 complete — log: $LOG"
-echo "Results written to:"
-ls -lh results/*.csv 2>/dev/null | tee -a "$LOG"

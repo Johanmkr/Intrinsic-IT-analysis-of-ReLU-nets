@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # Step 3 — Compute MI baselines (binning K=8, k-means K=|Y|, KSG k=3).
 #
-# Reads HDF5 checkpoints from step1_train.sh and the per-experiment
-# new_estimator_seed_*.csv from step2_estimate.sh.
+# Reads the HDF5 checkpoints from step1_train.sh (independent of step 2).
 #
 # Output CSVs:
 #   results/mi_baselines.csv           — composite + WBC, all layers/epochs

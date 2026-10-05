@@ -7,7 +7,7 @@ For each PCA dim, one bar group containing:
 One output figure: 2×2 grid, one panel per architecture.
 
 Inputs:
-    results/mnist_capacity_new_estimator.csv
+    results/routing_mnist_capacity.csv
 
 Outputs:
     figures/mnist_capacity_bars_per_arch.png / .pdf
@@ -28,6 +28,7 @@ sys.path.append(str(project_root))
 
 from src_experiment.utils import savefig
 from src_experiment.paths import neurips_figpath
+from src_experiment.results import load_routing
 from src_experiment.smoke import LAST_EPOCH
 
 REPO        = Path(__file__).resolve().parents[1]
@@ -50,7 +51,7 @@ FUNC_COLOURS = [_cmap(0.3 + 0.7 * i / (len(EPSILONS_FUNC) - 1))
 
 
 def load_data() -> pd.DataFrame:
-    df = pd.read_csv(RESULTS_DIR / "mnist_capacity_new_estimator.csv")
+    df = load_routing(RESULTS_DIR, "mnist_capacity")
     df = df[(df["layer"] == TARGET_LAST_LAYER)
             & (df["epoch"] == LAST_EPOCH)
             & (df["arch_str"].isin(ARCHS))].copy()

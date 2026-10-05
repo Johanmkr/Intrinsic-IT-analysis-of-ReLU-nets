@@ -19,21 +19,15 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 import numpy as np
 import pandas as pd
 
+from src_experiment.estimators import (
+    all_mutual_information_bits,
+    contingency_table,
+)
 from src_experiment.routing_estimator import (
     RoutingEstimator,
     cumulative_pattern_hashes,
     forward_activation_patterns,
     routing_information,
-    truncation_probability,
-)
-from src_experiment.rtg_analyzer import (
-    cumulative_patterns_per_region,
-    hamming1_adjacency,
-    rtg_diagnostics,
-)
-from src_experiment.rtg_overlap import (
-    region_dominant_class,
-    routing_loss_proxy,
 )
 
 PathLike = Union[str, Path]
@@ -207,32 +201,36 @@ def routing_information_quotient(
 # ---------------------------------------------------------------------------
 # Driver
 # ---------------------------------------------------------------------------
-@dataclass
-class QuotientResult:
-    layer: int
-    epsilon: float
-    N: int
-    num_regions: int
-    num_quotient: int
-    rho: float
-    rho_func: float
-    plug_in_bits: float
-    miller_madow_bits: float
-    plug_in_func_bits: float
-    miller_madow_func_bits: float
-    H_Y_bits: float
-    truncation_prob: float
-    num_rtg_components: int
-    rtg_largest_component_frac: float
-    rtg_isolated_frac: float
-    rl_proxy: float
+DEFAULT_EPSILONS: Tuple[float, ...] = (
+    0.0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.5, 2.0
+)
 
 
-DEFAULT_EPSILONS: Tuple[float, ...] = (0.0, 1e-8, 1e-6, 1e-4, 1e-2, 1e-1)
+def network_accuracy(
+    weights: Sequence[np.ndarray], biases: Sequence[np.ndarray], X: np.ndarray, y: np.ndarray
+) -> float:
+    """Fraction of ``X`` whose argmax output equals ``y`` (all layers incl. output)."""
+    a = np.asarray(X, dtype=np.float32)
+    for W, b in zip(weights[:-1], biases[:-1]):
+        a = np.maximum(a @ W.T + b, 0.0)
+    logits = a @ weights[-1].T + biases[-1]
+    return float((logits.argmax(axis=1) == y).mean())
+
+
+def _estimates(omega_ids: np.ndarray, y: np.ndarray, suffix: str) -> Dict[str, float]:
+    table = contingency_table(omega_ids, y)
+    return {k.replace("_bits", f"{suffix}_bits"): v
+            for k, v in all_mutual_information_bits(table).items()}
 
 
 class FunctionalQuotientEstimator:
-    """Recipe 2 + Recipe 3 driver. Composes :class:`RoutingEstimator` for HDF5 I/O."""
+    """Routing MI (raw and ε-quotient) of one trained network, all estimators.
+
+    Composes :class:`RoutingEstimator` for HDF5 I/O. One output row per
+    (epoch, hidden layer, ε) with, for every estimator in
+    :data:`src_experiment.estimators.ESTIMATORS`, the raw ``<name>_bits`` and
+    the quotient ``<name>_func_bits``.
+    """
 
     def __init__(self, h5_path: PathLike):
         self.routing = RoutingEstimator(h5_path)
@@ -250,120 +248,61 @@ class FunctionalQuotientEstimator:
         epoch: int,
         X: Optional[np.ndarray] = None,
         y: Optional[np.ndarray] = None,
-        X_holdout: Optional[np.ndarray] = None,
-        y_holdout: Optional[np.ndarray] = None,
         epsilons: Sequence[float] = DEFAULT_EPSILONS,
-    ) -> List[QuotientResult]:
+    ) -> List[dict]:
         if X is None:
             X, y = self.points, self.labels
         if y is None:
             raise ValueError("y must be provided when X is provided")
 
-        W, b = self.routing._load_weights(epoch)
+        W, b = self.routing._load_weights(epoch, include_output=True)
+        accuracy = network_accuracy(W, b, X, y)
+        W, b = W[:-1], b[:-1]
         patterns = forward_activation_patterns(W, b, X)
-
-        holdout_patterns = None
-        if X_holdout is not None:
-            if y_holdout is None:
-                raise ValueError("y_holdout must accompany X_holdout")
-            holdout_patterns = forward_activation_patterns(W, b, X_holdout)
-
         N = len(y)
-        num_classes = int(np.max(y)) + 1
-        out: List[QuotientResult] = []
+        H_Y = routing_information(np.zeros(N, dtype=np.int64), y)[3]
 
+        rows: List[dict] = []
         for layer in range(1, self.num_hidden_layers + 1):
             omega = cumulative_pattern_hashes(patterns, layer)
-            plug_in, mm, R, H_Y = routing_information(omega, y, num_classes=num_classes)
-            rho = R / N
-
-            tp = float("nan")
-            if holdout_patterns is not None:
-                omega_h = cumulative_pattern_hashes(holdout_patterns, layer)
-                tp = truncation_probability(omega, omega_h)
+            raw = _estimates(omega, y, "")
+            _, region_sizes = np.unique(omega, return_counts=True)
+            R = len(region_sizes)
 
             region_patterns = collect_unique_region_patterns(patterns, omega, layer)
             active_data = _build_active_data(W, b, region_patterns, layer)
 
-            # Recipe 4: ε-independent, computed once per (epoch, layer)
-            cum_patterns = cumulative_patterns_per_region(patterns, omega, layer)
-            adjacency = hamming1_adjacency(cum_patterns)
-            rtg = rtg_diagnostics(adjacency)
-
-            # Experiment 3: routing-loss proxy (also ε-independent)
-            dominant = region_dominant_class(omega, y)
-            rl = routing_loss_proxy(adjacency, dominant)
-
             for eps in epsilons:
                 quotient_map, num_q = cluster_functional(active_data, eps)
-                pi_func, mm_func, _, _ = routing_information_quotient(
-                    omega, y, quotient_map, num_classes=num_classes
-                )
-                out.append(
-                    QuotientResult(
-                        layer=layer,
-                        epsilon=float(eps),
-                        N=N,
-                        num_regions=R,
-                        num_quotient=num_q,
-                        rho=rho,
-                        rho_func=num_q / R if R > 0 else float("nan"),
-                        plug_in_bits=plug_in,
-                        miller_madow_bits=mm,
-                        plug_in_func_bits=pi_func,
-                        miller_madow_func_bits=mm_func,
-                        H_Y_bits=H_Y,
-                        truncation_prob=tp,
-                        num_rtg_components=rtg.num_components,
-                        rtg_largest_component_frac=rtg.largest_component_frac,
-                        rtg_isolated_frac=rtg.isolated_frac,
-                        rl_proxy=rl,
-                    )
-                )
-        return out
+                qids = np.fromiter((quotient_map[w] for w in omega), dtype=np.int64, count=N)
+                rows.append({
+                    "epoch": epoch,
+                    "layer": layer,
+                    "epsilon": float(eps),
+                    "N": N,
+                    "H_Y_bits": H_Y,
+                    "accuracy": accuracy,
+                    "num_regions": R,
+                    "rho": R / N,
+                    "singleton_region_frac": float((region_sizes == 1).mean()),
+                    "singleton_sample_frac": float((region_sizes == 1).sum() / N),
+                    "num_quotient": num_q,
+                    "rho_func": num_q / R,
+                    **raw,
+                    **_estimates(qids, y, "_func"),
+                })
+        return rows
 
     def evaluate_all(
         self,
         X: Optional[np.ndarray] = None,
         y: Optional[np.ndarray] = None,
-        X_holdout: Optional[np.ndarray] = None,
-        y_holdout: Optional[np.ndarray] = None,
         epsilons: Sequence[float] = DEFAULT_EPSILONS,
     ) -> pd.DataFrame:
         rows = []
         for ep in self.epochs:
-            for r in self.evaluate_epoch(
-                ep,
-                X=X,
-                y=y,
-                X_holdout=X_holdout,
-                y_holdout=y_holdout,
-                epsilons=epsilons,
-            ):
-                rows.append(
-                    {
-                        "network_id": self.network_id,
-                        "epoch": ep,
-                        "layer": r.layer,
-                        "epsilon": r.epsilon,
-                        "seed": self.seed,
-                        "N": r.N,
-                        "num_regions": r.num_regions,
-                        "num_quotient": r.num_quotient,
-                        "rho": r.rho,
-                        "rho_func": r.rho_func,
-                        "plug_in_bits": r.plug_in_bits,
-                        "miller_madow_bits": r.miller_madow_bits,
-                        "plug_in_func_bits": r.plug_in_func_bits,
-                        "miller_madow_func_bits": r.miller_madow_func_bits,
-                        "H_Y_bits": r.H_Y_bits,
-                        "truncation_prob": r.truncation_prob,
-                        "num_rtg_components": r.num_rtg_components,
-                        "rtg_largest_component_frac": r.rtg_largest_component_frac,
-                        "rtg_isolated_frac": r.rtg_isolated_frac,
-                        "rl_proxy": r.rl_proxy,
-                    }
-                )
+            for r in self.evaluate_epoch(ep, X=X, y=y, epsilons=epsilons):
+                rows.append({"network_id": self.network_id, "seed": self.seed, **r})
         return pd.DataFrame(rows)
 
 

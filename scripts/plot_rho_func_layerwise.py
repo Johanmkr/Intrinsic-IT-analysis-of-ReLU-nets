@@ -10,9 +10,9 @@ One panel per dataset; within each panel one line per architecture width,
 mean ± std across seeds.
 
 Inputs:
-    results/composite_label_noise_new_estimator.csv
-    results/wbc_label_noise_new_estimator.csv
-    results/mnist_capacity_new_estimator.csv
+    results/routing_composite_label_noise.csv
+    results/routing_wbc_label_noise.csv
+    results/routing_mnist_capacity.csv
 
 Outputs:
     figures/rho_func_layerwise.png  (also written to neurips_figpath)
@@ -32,6 +32,7 @@ sys.path.append(str(project_root))
 
 from src_experiment.utils import savefig
 from src_experiment.paths import neurips_figpath
+from src_experiment.results import load_routing
 from src_experiment.smoke import LAST_EPOCH
 
 REPO = Path(__file__).resolve().parents[1]
@@ -54,7 +55,7 @@ DATASET_TITLE = {
 
 
 def load_composite_wbc(dataset: str) -> pd.DataFrame:
-    df = pd.read_csv(RESULTS / f"{dataset}_label_noise_new_estimator.csv")
+    df = load_routing(RESULTS, f"{dataset}_label_noise")
     return df[
         (df["noise_level"] == NOISE)
         & (df["epoch"] == LAST_EPOCH)
@@ -63,7 +64,7 @@ def load_composite_wbc(dataset: str) -> pd.DataFrame:
 
 
 def load_mnist() -> pd.DataFrame:
-    df = pd.read_csv(RESULTS / "mnist_capacity_new_estimator.csv")
+    df = load_routing(RESULTS, "mnist_capacity")
     return df[
         (df["epoch"] == LAST_EPOCH)
         & (df["target_dim"] == MNIST_TARGET_DIM)

@@ -15,7 +15,7 @@ Usage
     funcmm  functional Miller-Madow vs eps   (secondary)
 
 Inputs:
-    results/mnist_capacity_new_estimator.csv
+    results/routing_mnist_capacity.csv
 
 Outputs:
     figures/mnist_{type}_vs_eps.png / .pdf
@@ -36,6 +36,7 @@ sys.path.append(str(project_root))
 
 from src_experiment.utils import savefig
 from src_experiment.paths import neurips_figpath
+from src_experiment.results import load_routing
 from src_experiment.smoke import LAST_EPOCH
 
 REPO = Path(__file__).resolve().parents[1]
@@ -58,7 +59,7 @@ TYPE_META = {
 
 
 def load_data(epoch: int) -> pd.DataFrame:
-    df = pd.read_csv(RESULTS_DIR / "mnist_capacity_new_estimator.csv")
+    df = load_routing(RESULTS_DIR, "mnist_capacity")
     return df[(df["layer"] == TARGET_LAST_LAYER) & (df["epoch"] == epoch)].copy()
 
 

@@ -101,6 +101,30 @@ def make_composite_probe(
     )
 
 
+@lru_cache(maxsize=None)
+def make_composite_insample(global_seed: int = 42) -> ProbeBundle:
+    """All N_SAMPLES Composite points the network was trained and tested on.
+
+    Replays ``get_new_data("composite")``: ``_make_composite_data`` with
+    ``seed=global_seed``, 80/20 stratified split, ``MinMaxScaler`` fit on the
+    train slice (test slice clipped to [-1, 1]). Returned as train slice
+    followed by test slice, so the last 20 % equal the ``points`` stored in
+    the HDF5. Labels are clean.
+    """
+    X, y = _make_composite_data(n_samples=N_SAMPLES, seed=global_seed)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=global_seed, stratify=y
+    )
+    scaler = MinMaxScaler(feature_range=(-1, 1))
+    X_train = scaler.fit_transform(X_train)
+    X_test = np.clip(scaler.transform(X_test), -1.0, 1.0)
+    return ProbeBundle(
+        X_probe=np.concatenate([X_train, X_test]).astype(np.float32),
+        y_probe=np.concatenate([y_train, y_test]).astype(np.int64),
+        note=f"composite in-sample (N={len(y)}): train + test split",
+    )
+
+
 # ---------------------------------------------------------------------------
 # WBC (real, fixed N=569)
 # ---------------------------------------------------------------------------

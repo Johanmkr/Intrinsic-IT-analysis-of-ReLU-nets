@@ -6,9 +6,9 @@ show agreement across all conditions.
 
 Inputs:
     results/mi_baselines.csv
-    results/composite_label_noise_new_estimator.csv
-    results/wbc_label_noise_new_estimator.csv
-    results/mnist_capacity_new_estimator.csv
+    results/routing_composite_label_noise.csv
+    results/routing_wbc_label_noise.csv
+    results/routing_mnist_capacity.csv
     results/mnist_fc_baselines.csv
 
 Outputs:
@@ -29,6 +29,7 @@ sys.path.append(str(project_root))
 
 from src_experiment.utils import savefig
 from src_experiment.paths import neurips_figpath
+from src_experiment.results import load_routing
 from src_experiment.smoke import LAST_EPOCH
 
 REPO = Path(__file__).resolve().parents[1]
@@ -94,7 +95,7 @@ def _load_composite_wbc() -> pd.DataFrame:
 
     frames = []
     for ds in DATASETS:
-        est = pd.read_csv(RESULTS / f"{ds}_label_noise_new_estimator.csv")
+        est = load_routing(RESULTS, f"{ds}_label_noise")
         est = est[(est["noise_level"] == 0.0)
                   & (est["epoch"] == LAST_EPOCH_BY_DATASET[ds])
                   & (est["arch_str"].isin(ARCHS_C))
@@ -115,13 +116,13 @@ def _load_composite_wbc() -> pd.DataFrame:
 
 def _load_mnist_fc() -> pd.DataFrame:
     bl_path = RESULTS / "mnist_fc_baselines.csv"
-    est_path = RESULTS / "mnist_capacity_new_estimator.csv"
+    est_path = RESULTS / "routing_mnist_capacity.csv"
     if not bl_path.exists() or not est_path.exists():
         print("[warn] MNIST FC files missing — skipping")
         return pd.DataFrame()
 
     bl = pd.read_csv(bl_path)
-    est = pd.read_csv(est_path)
+    est = load_routing(RESULTS, "mnist_capacity")
     est = est[(est["epoch"] == MNIST_FC_EPOCH)
               & (est["layer"] == MNIST_FC_LAYER)
               & (np.isclose(est["epsilon"], MNIST_FC_EPS))

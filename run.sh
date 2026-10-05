@@ -7,7 +7,7 @@
 #   ./run.sh smoke              # whole pipeline on a tiny sweep, in smoke/ (minutes)
 #   ./run.sh all [--force]      # steps 1-4 (6-8 h on a multi-core CPU)
 #   ./run.sh step1 [--force]    # train            → outputs/
-#   ./run.sh step2 [--force]    # routing MI       → results/*_new_estimator.csv
+#   ./run.sh step2 [--force]    # routing MI       → results/routing_<sweep>.csv
 #   ./run.sh step3 [--force]    # MI baselines     → results/*baselines.csv
 #   ./run.sh step4              # figures          → figures/
 

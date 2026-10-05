@@ -40,7 +40,7 @@ configs/generate_*.py   → YAML configs
         ↓
 step1_train.sh          → outputs/<sweep>/<experiment>/seed_<seed>.h5
         ↓
-step2_estimate.sh       → results/*_new_estimator.csv   (routing MI)
+step2_estimate.sh       → results/routing_<sweep>.csv    (routing MI, all estimators/protocols)
         ↓
 step3_baselines.sh      → results/mi_baselines.csv
                            results/mnist_fc_baselines.csv
@@ -82,36 +82,38 @@ Each `seed_<seed>.h5` stores:
 
 ---
 
-## Step 2 — Routing-information estimator (`step2_estimate.sh`)
+## Step 2 — Routing information (`step2_estimate.sh` → `run_estimate.py`)
 
-Implements Recipes 1–3 from the paper via `src_experiment/functional_quotient.py`:
+For every trained network and every estimation protocol,
+`src_experiment/functional_quotient.py` computes, at every saved epoch and
+hidden layer:
 
-- **Recipe 1** (plug-in routing MI): routes each probe point through the
-  network using a fresh forward pass; assigns it to a linear region by MD5-
-  hashing its cumulative activation pattern; computes plug-in and
-  Miller–Madow-corrected I(Y; Ω).
-- **Recipe 2** (functional quotient): for each pair of regions, computes the
-  active subnetwork matrix Ã and clusters regions with relative Frobenius
-  distance ≤ ε.
-- **Recipe 3** (quotient MI): applies Recipe 1 to the ε-merged contingency
-  table.
+- the data-supported regions Ω_D (MD5 hash of the cumulative activation
+  pattern of each point) and ρ = |Ω_D| / N, plus the fraction of singleton
+  regions;
+- the routing information Î(Y; Ω_D) with six estimators
+  (`src_experiment/estimators.py`): plug-in, Miller–Madow, Grassberger,
+  Chao–Shen, Chao–Wang–Jost and ANSB;
+- for each ε in {0, 0.01, 0.05, 0.1, …, 0.9, 1.0, 1.5, 2.0}, the functional
+  quotient (regions merged when their active linear maps are within relative
+  Frobenius distance ε; bias excluded; regions visited in first-encounter order)
+  and the same six estimators on it, plus ρ_func;
+- the network's accuracy on the evaluated points.
 
-Probe sets (the stored test split of each training run, i.e. a held-out set):
-- **Composite**: the 20 % test split of the N = 10 000 dataset (N = 2 000).
-- **WBC**: the 20 % test split of the N = 569 dataset (N = 114).
-- **MNIST**: the standard MNIST test set (N = 10 000), PCA-reduced and scaled
-  with the training-set fit.
+Protocols:
 
-`run_label_noise_estimator.py` can instead draw a fresh Composite probe
-(`--composite-probe-size`) or use all 569 WBC points (`--wbc-mode full`);
-the paper figures use neither.
+| Protocol | Composite | WBC | MNIST |
+|---|---|---|---|
+| `heldout` — the 20 % test split stored with each network (never trained on) | N = 2 000 | N = 114 | N = 10 000 (MNIST test set) |
+| `insample` — all points, train split followed by test split | N = 10 000 | N = 569 | — |
 
-ε grid: `{0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 1.0, 2.0}`.
+The figures use `heldout` (`src_experiment/results.py`).
 
-Output columns (one row per (experiment, epoch, layer, ε)):
-`network_id, epoch, layer, epsilon, seed, N, num_regions, num_quotient,
-rho, rho_func, plug_in_bits, miller_madow_bits, plug_in_func_bits,
-miller_madow_func_bits, H_Y_bits, truncation_prob, …`
+Output: one CSV per (network, protocol) next to its HDF5, aggregated into
+`results/routing_<sweep>.csv` (one row per network × protocol × epoch × layer
+× ε; estimator columns `<estimator>_bits` and `<estimator>_func_bits`), and
+`results/provenance.json` (git commit, settings, row counts). Jobs run in
+parallel (`--workers`, default #CPUs − 2).
 
 ---
 
@@ -169,8 +171,7 @@ intrinsic_IT_analysis_of_relu_nets/
 │   └── generate_mnist.py          ← generates configs/mnist_capacity/
 │
 ├── run_training.py                ← single-model training entry point
-├── run_label_noise_estimator.py   ← routing MI sweep (composite + WBC)
-├── run_mnist_capacity_estimator.py← routing MI sweep (MNIST)
+├── run_estimate.py                ← step 2: routing MI, all sweeps/protocols
 │
 ├── scripts/
 │   ├── run_mi_baselines.py        ← baseline sweep (composite + WBC)
@@ -187,7 +188,9 @@ intrinsic_IT_analysis_of_relu_nets/
 │   ├── train_models.py            ← SGD training loop with epoch callbacks
 │   ├── run_experiment.py          ← orchestrates training + HDF5 saving
 │   ├── utils.py                   ← NeuralNet, savefig
-│   ├── routing_estimator.py       ← Recipe 1: plug-in + Miller–Madow routing MI
+│   ├── routing_estimator.py       ← regions Ω_D: forward pass + pattern hashing
+│   ├── estimators.py              ← plug-in, MM, Grassberger, Chao–Shen, CWJ, ANSB
+│   ├── results.py                 ← loads results/routing_<sweep>.csv by protocol
 │   ├── functional_quotient.py     ← Recipes 2 + 3: ε-functional quotient
 │   ├── probe_loader.py            ← probe/holdout set builders per dataset
 │   ├── rtg_analyzer.py            ← RTG (routing topology graph) diagnostics
