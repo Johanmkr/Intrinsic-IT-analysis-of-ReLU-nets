@@ -1,15 +1,11 @@
 """
-Shared activation extractor for Phase A baselines.
+Activation extractor for the MI baselines (step 3).
 
 Loads model weights from a training-output HDF5, runs a forward pass on a
 probe matrix, and returns the pre- or post-activation at the chosen layer.
-Both halves of Phase A (MI baselines, generalization-gap predictors) call
-this. The forward-pass convention matches
+The forward-pass convention matches
 ``src_experiment.routing_estimator.forward_activation_patterns`` — strict
 ``z > 0`` ReLU gating, PyTorch weight layout.
-
-For LeNet-5 HDF5s (``arch_type=lenet5``) the deepest hidden FC layer's
-pre-activation is exposed via :func:`load_lenet_layer_activations`.
 """
 
 from __future__ import annotations
@@ -105,140 +101,3 @@ def load_layer_activations(
         a = np.where(z > 0, z, 0.0)
 
     raise RuntimeError("forward pass terminated without returning")  # unreachable
-
-
-# ---------------------------------------------------------------------------
-# LeNet-5 activation tap
-# ---------------------------------------------------------------------------
-def _is_lenet_h5(h5_path: Path) -> bool:
-    with h5py.File(h5_path, "r") as f:
-        return str(f["metadata"].attrs.get("arch_type", "")) == "lenet5"
-
-
-def load_lenet_layer_activations(
-    h5_path: PathLike,
-    epoch: int,
-    layer: int,
-    X: np.ndarray,
-    kind: Kind = "pre",
-) -> np.ndarray:
-    """Return the pre/post activation of one ReLU step in a LeNet-5 HDF5.
-
-    Layer convention:
-
-    * ``layer = 1 .. n_conv`` — conv-ReLU output (pre-pool), flattened to
-      ``(N, C * H * W)``. ``"pre"`` returns the conv output before ReLU
-      (signed); ``"post"`` returns it after ReLU.
-    * ``layer = n_conv + 1 .. n_conv + n_fc_hidden`` — FC hidden layer.
-      ``"pre"`` returns the linear output before ReLU; ``"post"`` returns
-      it after ReLU.
-    * ``layer = n_conv + n_fc_hidden + 1`` — output logits (linear, no
-      ReLU). Both ``"pre"`` and ``"post"`` return the same tensor.
-
-    Probe ``X`` may be flat ``(N, n_0)`` or already shaped ``(N, C, H, W)``.
-    """
-    import torch
-
-    from src_experiment.utils import LeNet5  # late import to avoid hard dep at import time
-
-    if kind not in ("pre", "post"):
-        raise ValueError(f"kind must be 'pre' or 'post', got {kind!r}")
-
-    h5_path = Path(h5_path)
-    with h5py.File(h5_path, "r") as f:
-        attrs = dict(f["metadata"].attrs)
-        conv_channels = tuple(int(x) for x in attrs.get("conv_channels", []))
-        fc_widths = tuple(int(x) for x in attrs.get("fc_widths", []))
-        kernel_size = int(attrs.get("kernel_size", 5))
-        pool_size = int(attrs.get("pool_size", 2))
-        input_shape = tuple(int(x) for x in attrs.get("inferred_input_shape", (1, 28, 28)))
-        num_classes = int(attrs.get("inferred_num_classes", 10))
-        grp = f[f"epochs/epoch_{epoch}"]
-        state = {}
-        idx = 1
-        while f"conv{idx}.weight" in grp:
-            state[f"conv{idx}.weight"] = torch.from_numpy(grp[f"conv{idx}.weight"][:])
-            state[f"conv{idx}.bias"] = torch.from_numpy(grp[f"conv{idx}.bias"][:])
-            idx += 1
-        idx = 1
-        while f"fc{idx}.weight" in grp:
-            state[f"fc{idx}.weight"] = torch.from_numpy(grp[f"fc{idx}.weight"][:])
-            state[f"fc{idx}.bias"] = torch.from_numpy(grp[f"fc{idx}.bias"][:])
-            idx += 1
-
-    n_conv = len(conv_channels)
-    n_fc_hidden = len(fc_widths)
-    n_relu = n_conv + n_fc_hidden
-    if not 1 <= layer <= n_relu + 1:
-        raise ValueError(
-            f"layer={layer} out of range [1, {n_relu + 1}] for this LeNet HDF5"
-        )
-
-    model = LeNet5(
-        conv_channels=conv_channels,
-        fc_widths=fc_widths,
-        num_classes=num_classes,
-        input_shape=input_shape,
-        kernel_size=kernel_size,
-        pool_size=pool_size,
-    )
-    model.load_state_dict(state)
-    model.eval()
-
-    X = np.asarray(X, dtype=np.float32)
-    if X.ndim == 2:
-        x = torch.from_numpy(X).view(X.shape[0], *input_shape)
-    else:
-        x = torch.from_numpy(X)
-
-    captured: dict[str, torch.Tensor] = {}
-
-    if layer <= n_conv:
-        target = getattr(model, f"conv{layer}")
-
-        def hook(_module, _inp, out):
-            captured["v"] = out.detach()
-
-        h = target.register_forward_hook(hook)
-    elif layer <= n_relu:
-        fc_idx = layer - n_conv  # 1-indexed FC hidden
-        target = getattr(model, f"fc{fc_idx}")
-
-        def hook(_module, _inp, out):
-            captured["v"] = out.detach()
-
-        h = target.register_forward_hook(hook)
-    else:
-        # Output logits — capture forward output.
-        def hook(_module, _inp, out):
-            captured["v"] = out.detach()
-
-        h = model.register_forward_hook(hook)
-
-    with torch.no_grad():
-        _ = model(x)
-    h.remove()
-
-    z = captured["v"]
-    if z.dim() == 4:
-        # Conv layer pre-/post-activation: flatten spatial.
-        if kind == "post":
-            z = torch.relu(z)
-        return z.reshape(z.size(0), -1).cpu().numpy().astype(np.float32, copy=False)
-    if kind == "post" and layer <= n_relu:
-        z = torch.relu(z)
-    return z.cpu().numpy().astype(np.float32, copy=False)
-
-
-def load_activations_dispatch(
-    h5_path: PathLike,
-    epoch: int,
-    layer: int,
-    X: np.ndarray,
-    kind: Kind = "pre",
-) -> np.ndarray:
-    """Dispatch by HDF5 ``arch_type`` to the MLP or LeNet activation loader."""
-    h5_path = Path(h5_path)
-    if _is_lenet_h5(h5_path):
-        return load_lenet_layer_activations(h5_path, epoch, layer, X, kind=kind)
-    return load_layer_activations(h5_path, epoch, layer, X, kind=kind)

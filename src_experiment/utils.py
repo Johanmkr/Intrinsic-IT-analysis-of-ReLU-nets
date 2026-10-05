@@ -1,10 +1,9 @@
 from __future__ import annotations
 from pathlib import Path
-from typing import List, Optional, Sequence, Tuple
+from typing import List, Optional
 import torch
 import torch.nn as nn
 import torch.nn.init as init
-import matplotlib.pyplot as plt
 
 class NeuralNet(nn.Module):
     """
@@ -101,111 +100,6 @@ class NeuralNet(nn.Module):
 
         # Output layer
         out = getattr(self, f"l{len(self.hidden_sizes) + 1}")(out)
-        return out
-
-
-class LeNet5(nn.Module):
-    """Parametric LeNet-5 (Conv-Pool-Conv-Pool-FC-FC-FC) for Phase C.
-
-    Default `(conv_channels=(6, 16), fc_widths=(120, 84))` matches the
-    LeNet-S reference; sweep widths via the constructor.
-
-    Layer naming mirrors `NeuralNet` so the HDF5 saver picks up
-    `state_dict()` keys in a predictable order. Hidden conv/linear use
-    Kaiming-normal init; the output linear uses Xavier-uniform; biases
-    zero. Seed scope follows the same `fork_rng` pattern as
-    `NeuralNet`.
-    """
-
-    def __init__(
-        self,
-        conv_channels: Sequence[int] = (6, 16),
-        fc_widths: Sequence[int] = (120, 84),
-        num_classes: int = 10,
-        input_shape: Tuple[int, int, int] = (1, 28, 28),
-        kernel_size: int = 5,
-        pool_size: int = 2,
-        seed: Optional[int] = None,
-    ):
-        super().__init__()
-        self.conv_channels = tuple(conv_channels)
-        self.fc_widths = tuple(fc_widths)
-        self.num_classes = num_classes
-        self.input_shape = tuple(input_shape)
-        self.kernel_size = kernel_size
-        self.pool_size = pool_size
-
-        self._build_layers()
-
-        if seed is not None:
-            gpu_devices = []
-            if torch.cuda.is_available():
-                gpu_devices = [torch.cuda.current_device()]
-            with torch.random.fork_rng(devices=gpu_devices):
-                torch.manual_seed(seed)
-                if torch.cuda.is_available():
-                    torch.cuda.manual_seed_all(seed)
-                self._init_weights()
-        else:
-            self._init_weights()
-
-    def _build_layers(self):
-        in_c, in_h, in_w = self.input_shape
-        prev_c, prev_h, prev_w = in_c, in_h, in_w
-        for i, out_c in enumerate(self.conv_channels):
-            setattr(self, f"conv{i + 1}",
-                    nn.Conv2d(prev_c, out_c, kernel_size=self.kernel_size))
-            setattr(self, f"relu_c{i + 1}", nn.ReLU())
-            setattr(self, f"pool{i + 1}",
-                    nn.MaxPool2d(kernel_size=self.pool_size))
-            # Track output spatial size after conv (no padding) + pool.
-            prev_h = (prev_h - self.kernel_size + 1) // self.pool_size
-            prev_w = (prev_w - self.kernel_size + 1) // self.pool_size
-            prev_c = out_c
-        self._flat_dim = prev_c * prev_h * prev_w
-        if self._flat_dim <= 0:
-            raise ValueError(
-                f"Conv stack produced non-positive flat dim "
-                f"({prev_c}×{prev_h}×{prev_w}) for input {self.input_shape}."
-            )
-
-        prev_dim = self._flat_dim
-        for j, w in enumerate(self.fc_widths):
-            setattr(self, f"fc{j + 1}", nn.Linear(prev_dim, w))
-            setattr(self, f"relu_f{j + 1}", nn.ReLU())
-            prev_dim = w
-        out_idx = len(self.fc_widths) + 1
-        setattr(self, f"fc{out_idx}", nn.Linear(prev_dim, self.num_classes))
-
-    def _init_weights(self) -> None:
-        self.apply(self._initialization_logic)
-
-    def _initialization_logic(self, m):
-        if isinstance(m, (nn.Linear, nn.Conv2d)):
-            is_output = (
-                isinstance(m, nn.Linear)
-                and m.out_features == self.num_classes
-            )
-            if is_output:
-                init.xavier_uniform_(m.weight)
-            else:
-                init.kaiming_normal_(m.weight, nonlinearity="relu")
-            if m.bias is not None:
-                init.zeros_(m.bias)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if x.dim() == 2:
-            x = x.view(x.size(0), *self.input_shape)
-        out = x
-        for i in range(len(self.conv_channels)):
-            out = getattr(self, f"conv{i + 1}")(out)
-            out = getattr(self, f"relu_c{i + 1}")(out)
-            out = getattr(self, f"pool{i + 1}")(out)
-        out = out.flatten(1)
-        for j in range(len(self.fc_widths)):
-            out = getattr(self, f"fc{j + 1}")(out)
-            out = getattr(self, f"relu_f{j + 1}")(out)
-        out = getattr(self, f"fc{len(self.fc_widths) + 1}")(out)
         return out
 
 

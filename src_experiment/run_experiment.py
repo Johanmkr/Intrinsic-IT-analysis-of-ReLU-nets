@@ -14,7 +14,7 @@ if __name__ == "__main__" and __package__ is None:
     __package__ = "src_experiment"
 
 from .dataset import get_new_data
-from .utils import NeuralNet, LeNet5
+from .utils import NeuralNet
 from .train_models import train_model_multiclass
 
 def set_global_seed(seed: int):
@@ -132,28 +132,15 @@ def run(config_path, overwrite=False):
     if "input_size" in config: input_size = config["input_size"]
     if "num_classes" in config: num_classes = config["num_classes"]
 
-    # 3. Initialize Model — dispatch on arch_type (default MLP for back-compat).
-    arch_type = config.get("arch_type", "mlp").lower()
-    if arch_type == "mlp":
-        model = NeuralNet(
-            input_size=input_size,
-            hidden_sizes=config.get("architecture", [10, 10]),
-            num_classes=num_classes,
-            dropout=config.get("dropout", 0.0),
-            seed=model_seed,
-        )
-    elif arch_type == "lenet5":
-        model = LeNet5(
-            conv_channels=tuple(config.get("conv_channels", (6, 16))),
-            fc_widths=tuple(config.get("fc_widths", (120, 84))),
-            num_classes=num_classes,
-            input_shape=tuple(config.get("input_shape", input_shape)),
-            kernel_size=config.get("kernel_size", 5),
-            pool_size=config.get("pool_size", 2),
-            seed=model_seed,
-        )
-    else:
-        raise ValueError(f"Unknown arch_type: {arch_type!r}")
+    # 3. Initialize Model (fully connected ReLU network)
+    arch_type = "mlp"
+    model = NeuralNet(
+        input_size=input_size,
+        hidden_sizes=config.get("architecture", [10, 10]),
+        num_classes=num_classes,
+        dropout=config.get("dropout", 0.0),
+        seed=model_seed,
+    )
 
     # 4. Setup HDF5 Incremental Writer
     print(f"Initializing HDF5 file at {h5_path}...")

@@ -6,8 +6,8 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 from ucimlrepo import fetch_ucirepo
-from typing import Tuple, Dict, Callable
-from torchvision import datasets, transforms
+from typing import Tuple, Callable
+from torchvision import datasets
 from src_experiment.smoke import SMOKE
 
 N_SAMPLES = 10000
@@ -102,22 +102,6 @@ def _load_uci(id: int, target_col: str = None, target_val: str = None, map_func:
         
     return X.to_numpy(dtype=np.float32), y.to_numpy(dtype=np.int64)
 
-def _map_car_data(X_raw, y_raw):
-    mapping = {
-        "buying":   {"low": 0, "med": 1, "high": 2, "vhigh": 3},
-        "maint":    {"low": 0, "med": 1, "high": 2, "vhigh": 3},
-        "doors":    {"2": 0, "3": 1, "4": 2, "5more": 3},
-        "persons":  {"2": 0, "4": 1, "more": 2},
-        "lug_boot": {"small": 0, "med": 1, "big": 2},
-        "safety":   {"low": 0, "med": 1, "high": 2}
-    }
-    X = X_raw.copy()
-    for col, counts in mapping.items():
-        X[col] = X[col].map(counts)
-    target_mapping = {"unacc": 0, "acc": 1, "good": 2, "vgood": 3}
-    y = y_raw.iloc[:, 0].map(target_mapping)
-    return X, y
-
 def _make_composite_data(n_samples: int, seed: int, noise=None) -> Tuple[np.ndarray, np.ndarray]:
     """Generates the custom moons/circles/blobs composite dataset."""
     # Proportional splits based on the requested n_samples
@@ -157,29 +141,14 @@ def get_new_data(dataset_name: str, noise: float = 0.0, batch_size: int = DEFAUL
     """
     dataset_name = dataset_name.lower()
     
-    # --- Synthetic Datasets ---
-    if dataset_name == "moons":
-        X, y = make_moons(n_samples=N_SAMPLES, noise=noise, random_state=split_seed)
-        train_ds, test_ds = process_and_split(X, y, noise_level=0.0, seed=split_seed, target_dim=target_dim) 
-        
-    elif dataset_name == "circles":
-        X, y = make_circles(n_samples=N_SAMPLES, noise=noise, random_state=split_seed)
-        train_ds, test_ds = process_and_split(X, y, noise_level=0.0, seed=split_seed, target_dim=target_dim)
-
-    elif dataset_name == "blobs":
-        centers = kwargs.get("centers", 3)
-        n_features = kwargs.get("n_features", 2)
-        X, y = make_blobs(n_samples=N_SAMPLES, centers=centers, n_features=n_features, random_state=split_seed)
-        train_ds, test_ds = process_and_split(X, y, noise_level=0.0, seed=split_seed, target_dim=target_dim)
-        
-    elif dataset_name == "composite":
+    if dataset_name == "composite":
         X, y = _make_composite_data(n_samples=N_SAMPLES, seed=split_seed)
         # We pass noise_level=0.0 to the pipeline since the feature noise is already baked into the shapes
         train_ds, test_ds = process_and_split(X, y, noise_level=noise, seed=split_seed, target_dim=target_dim,
                                               shuffle_labels=kwargs.get("permute_labels", False))
 
     # --- Standard Vision Datasets (Modified for Eager PCA Support) ---
-    elif dataset_name in ["mnist", "mnist_minimal", "mnist_minimal_random"]:
+    elif dataset_name == "mnist":
         print(f"Fetching {dataset_name} (torchvision)...")
         train_data = datasets.MNIST(root='./data', train=True, download=True)
         test_data = datasets.MNIST(root='./data', train=False, download=True)
@@ -201,28 +170,13 @@ def get_new_data(dataset_name: str, noise: float = 0.0, batch_size: int = DEFAUL
             X_test = X_test[test_idx]
             y_test = y_test[test_idx]
 
-        # Apply the minimal downsampling (28x28 -> 7x7)
-        if dataset_name in ["mnist_minimal", "mnist_minimal_random"]:
-            X_train = torch.nn.functional.avg_pool2d(X_train.unsqueeze(1), kernel_size=4).squeeze(1)
-            X_test = torch.nn.functional.avg_pool2d(X_test.unsqueeze(1), kernel_size=4).squeeze(1)
-            
         # Flatten to 2D numpy arrays for sklearn compatibility
         X_train = X_train.view(X_train.size(0), -1).numpy()
         X_test = X_test.view(X_test.size(0), -1).numpy()
         
-        # OVERWRITE WITH RANDOM LABELS
-        if dataset_name == "mnist_minimal_random":
-            print("⚠️ Overwriting targets with completely random labels (0-9)...")
-            rng_labels = np.random.default_rng(split_seed)
-            y_train = rng_labels.integers(0, 10, size=y_train.shape)
-            y_test = rng_labels.integers(0, 10, size=y_test.shape)
-            noise = 0.0 
-
-        # Call to your custom split function
-        train_ds, test_ds = process_and_split(X_train, y_train, noise_level=noise, test_size=0.2, seed=split_seed, target_dim=target_dim)
-        
-        # Process test set manually to mirror the train set operations
-        if noise > 0.0 and dataset_name != "mnist_minimal_random":
+        # MNIST keeps its standard 60k/10k split; PCA and scaling are fit on the
+        # training split only, mirroring process_and_split.
+        if noise > 0.0:
             y_train = inject_label_noise_vectorized(y_train, noise, 10, split_seed)
             
         if target_dim is not None:
@@ -241,48 +195,11 @@ def get_new_data(dataset_name: str, noise: float = 0.0, batch_size: int = DEFAUL
         train_ds = TensorDataset(torch.tensor(X_train, dtype=torch.float32), torch.tensor(y_train, dtype=torch.int64))
         test_ds = TensorDataset(torch.tensor(X_test, dtype=torch.float32), torch.tensor(y_test, dtype=torch.int64))
 
-    # --- Full MNIST (Phase C: CNN sweep) ---
-    elif dataset_name == "mnist_full":
-        # Full 60k/10k MNIST as (N, 1, 28, 28), scaled to [-1, 1].
-        # Optional label noise via the same `inject_label_noise_vectorized`
-        # used elsewhere; no PCA, no subsample, no flatten.
-        print("Fetching mnist_full (torchvision)...")
-        train_data = datasets.MNIST(root="./data", train=True, download=True)
-        test_data = datasets.MNIST(root="./data", train=False, download=True)
-        X_train = (train_data.data.float() / 255.0 - 0.5) * 2.0  # -> [-1, 1]
-        X_test = (test_data.data.float() / 255.0 - 0.5) * 2.0
-        X_train = X_train.unsqueeze(1)  # (N, 1, 28, 28)
-        X_test = X_test.unsqueeze(1)
-        y_train = train_data.targets.numpy().astype(np.int64)
-        y_test = test_data.targets.numpy().astype(np.int64)
-
-        if noise > 0.0:
-            y_train = inject_label_noise_vectorized(y_train, noise, 10, split_seed)
-
-        train_ds = TensorDataset(X_train,
-                                 torch.tensor(y_train, dtype=torch.int64))
-        test_ds = TensorDataset(X_test,
-                                torch.tensor(y_test, dtype=torch.int64))
-
     # --- UCI Datasets ---
     elif dataset_name == "wbc":
         X, y = _load_uci(id=17, target_col="Diagnosis", target_val="M")
         train_ds, test_ds = process_and_split(X, y, noise_level=noise, seed=split_seed, target_dim=target_dim,
                                               shuffle_labels=kwargs.get("permute_labels", False))
-        
-    elif dataset_name == "wine":
-        X, y = _load_uci(id=109)
-        train_ds, test_ds = process_and_split(X, y, noise_level=noise, seed=split_seed, target_dim=target_dim)
-        
-    elif dataset_name == "hd":
-        X, y = _load_uci(id=45)
-        X[np.isnan(X)] = 0
-        y[np.isnan(y)] = 0
-        train_ds, test_ds = process_and_split(X, y, noise_level=noise, seed=split_seed, target_dim=target_dim)
-
-    elif dataset_name == "car":
-        X, y = _load_uci(id=19, map_func=_map_car_data)
-        train_ds, test_ds = process_and_split(X, y, noise_level=noise, seed=split_seed, target_dim=target_dim)
         
     else:
         raise ValueError(f"Invalid dataset: {dataset_name}")

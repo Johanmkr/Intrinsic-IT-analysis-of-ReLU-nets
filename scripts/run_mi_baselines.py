@@ -50,7 +50,7 @@ import pandas as pd
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 
-from src_experiment.baselines.activations import load_activations_dispatch  # noqa: E402
+from src_experiment.baselines.activations import load_layer_activations  # noqa: E402
 from src_experiment.baselines.mi_baselines import (  # noqa: E402
     InfoNCEEstimator,
     MINEEstimator,
@@ -199,7 +199,7 @@ def _evaluate_cell(
 ) -> dict:
     """Evaluate all baseline estimators at a single (epoch, layer) cell."""
     num_classes = meta["num_classes"]
-    T = load_activations_dispatch(h5_path, epoch, layer, X, kind="pre")
+    T = load_layer_activations(h5_path, epoch, layer, X, kind="pre")
     d_T = T.shape[1]
 
     row: dict = {

@@ -206,17 +206,19 @@ intrinsic_IT_analysis_of_relu_nets/
 │   ├── routing_estimator.py       ← regions Ω_D: forward pass + pattern hashing
 │   ├── estimators.py              ← plug-in, MM, Grassberger, Chao–Shen, CWJ, ANSB
 │   ├── results.py                 ← loads results/routing_<sweep>.csv by protocol
-│   ├── functional_quotient.py     ← Recipes 2 + 3: ε-functional quotient
-│   ├── probe_loader.py            ← probe/holdout set builders per dataset
-│   ├── rtg_analyzer.py            ← RTG (routing topology graph) diagnostics
-│   ├── rtg_overlap.py             ← routing-loss proxy
+│   ├── functional_quotient.py     ← ε-functional quotient + per-network estimates (step 2)
+│   ├── probe_loader.py            ← in-sample / probe sets per dataset
 │   ├── paths.py                   ← figure output path (→ figures/)
 │   ├── smoke.py                   ← seeds/epochs/PCA dims (full vs ./run.sh smoke)
 │   └── baselines/
 │       ├── activations.py         ← forward-pass activation extraction
 │       └── mi_baselines.py        ← binning / k-means / KSG estimators
 │
-├── tests/test_parx_partitions.py  ← cross-validates the estimators against parx
+├── tests/                         ← ./run.sh test (smoke checkpoints) / --full (outputs/)
+│   ├── test_estimators.py         ← estimators vs hand values, mpmath and infomeasure
+│   ├── test_routing_pipeline.py   ← step 2 consistency (regions, quotient, protocols)
+│   ├── test_label_permutation.py  ← step 2 rebuilds the permuted training labels
+│   └── test_parx_partitions.py    ← region code cross-checked against parx
 ├── outputs/                       ← created by step 1 (HDF5 checkpoints)
 ├── results/                       ← created by steps 2–3 (aggregated CSVs)
 ├── figures/                       ← created by step 4 (PDF + PNG)

@@ -18,7 +18,6 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import h5py
 import numpy as np
-import pandas as pd
 
 PathLike = Union[str, Path]
 
@@ -97,7 +96,6 @@ class RoutingResult:
     miller_madow_bits: float
     H_Y_bits: float
     rho: float
-    truncation_prob: float  # NaN if no holdout set provided
 
 
 def routing_information(
@@ -148,18 +146,6 @@ def routing_information(
 
     H_Y = float(-(P_y[P_y > 0] * np.log2(P_y[P_y > 0])).sum())
     return plug_in_bits, mm_bits, R, H_Y
-
-
-def truncation_probability(
-    probe_omega_ids: np.ndarray,
-    holdout_omega_ids: np.ndarray,
-) -> float:
-    """Fraction of holdout patterns whose region was not seen in the probe set."""
-    support = set(probe_omega_ids.tolist())
-    if len(holdout_omega_ids) == 0:
-        return float("nan")
-    miss = sum(1 for w in holdout_omega_ids if w not in support)
-    return miss / len(holdout_omega_ids)
 
 
 # ---------------------------------------------------------------------------
@@ -216,14 +202,11 @@ class RoutingEstimator:
         epoch: int,
         X: Optional[np.ndarray] = None,
         y: Optional[np.ndarray] = None,
-        X_holdout: Optional[np.ndarray] = None,
-        y_holdout: Optional[np.ndarray] = None,
     ) -> List[RoutingResult]:
-        """Evaluate Recipe 1 at every hidden layer for one checkpoint.
+        """Plug-in and Miller–Madow routing MI at every hidden layer of one checkpoint.
 
-        Defaults to the test set stored in the HDF5 file. Pass ``X``/``y`` to
-        score a different probe set; pass ``X_holdout`` to compute the
-        truncation probability against a disjoint validation set.
+        Defaults to the test set stored in the HDF5 file; pass ``X``/``y`` to
+        score a different set.
         """
         if X is None:
             X, y = self.points, self.labels
@@ -233,12 +216,6 @@ class RoutingEstimator:
         W, b = self._load_weights(epoch)
         patterns = forward_activation_patterns(W, b, X)
 
-        holdout_patterns = None
-        if X_holdout is not None:
-            if y_holdout is None:
-                raise ValueError("y_holdout must accompany X_holdout")
-            holdout_patterns = forward_activation_patterns(W, b, X_holdout)
-
         N = len(y)
         num_classes = int(np.max(y)) + 1
         out: List[RoutingResult] = []
@@ -247,10 +224,6 @@ class RoutingEstimator:
             plug_in, mm, R, H_Y = routing_information(
                 omega, y, num_classes=num_classes
             )
-            tp = float("nan")
-            if holdout_patterns is not None:
-                omega_h = cumulative_pattern_hashes(holdout_patterns, layer)
-                tp = truncation_probability(omega, omega_h)
             out.append(
                 RoutingResult(
                     layer=layer,
@@ -260,45 +233,9 @@ class RoutingEstimator:
                     miller_madow_bits=mm,
                     H_Y_bits=H_Y,
                     rho=R / N,
-                    truncation_prob=tp,
                 )
             )
         return out
-
-    def evaluate_all(
-        self,
-        X: Optional[np.ndarray] = None,
-        y: Optional[np.ndarray] = None,
-        X_holdout: Optional[np.ndarray] = None,
-        y_holdout: Optional[np.ndarray] = None,
-    ) -> pd.DataFrame:
-        """Run :meth:`evaluate_epoch` over every saved checkpoint.
-
-        Returns a Recipe-1-only DataFrame (one row per epoch and hidden layer).
-        Recipe-2/3/4 columns are produced by
-        :class:`src_experiment.functional_quotient.FunctionalQuotientEstimator`.
-        """
-        rows = []
-        for ep in self.epochs:
-            for r in self.evaluate_epoch(
-                ep, X=X, y=y, X_holdout=X_holdout, y_holdout=y_holdout
-            ):
-                rows.append(
-                    {
-                        "network_id": self.network_id,
-                        "epoch": ep,
-                        "layer": r.layer,
-                        "seed": self.seed,
-                        "N": r.N,
-                        "num_regions": r.num_regions,
-                        "plug_in_bits": r.plug_in_bits,
-                        "miller_madow_bits": r.miller_madow_bits,
-                        "H_Y_bits": r.H_Y_bits,
-                        "rho": r.rho,
-                        "truncation_prob": r.truncation_prob,
-                    }
-                )
-        return pd.DataFrame(rows)
 
 
 # ---------------------------------------------------------------------------
@@ -311,5 +248,5 @@ if __name__ == "__main__":
         print("usage: python -m src_experiment.routing_estimator <path/to/file.h5>")
         sys.exit(1)
     estimator = RoutingEstimator(sys.argv[1])
-    df = estimator.evaluate_all()
-    print(df.to_string(index=False))
+    for r in estimator.evaluate_epoch(estimator.epochs[-1]):
+        print(r)

@@ -86,7 +86,6 @@ def main() -> None:
 
     paths = []
     for arch in ARCHS:
-        astr = str(arch)
         for seed in SEEDS:
             out_dir = CONFIG_ROOT / f"n{NOISE}_{arch_str(arch)}"
             out_dir.mkdir(parents=True, exist_ok=True)

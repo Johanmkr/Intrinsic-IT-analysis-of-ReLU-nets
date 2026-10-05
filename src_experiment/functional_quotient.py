@@ -183,22 +183,6 @@ def cluster_functional(
 
 
 # ---------------------------------------------------------------------------
-# Recipe 3: quotient MI
-# ---------------------------------------------------------------------------
-def routing_information_quotient(
-    omega_ids: np.ndarray,
-    y: np.ndarray,
-    quotient_map: Dict[bytes, int],
-    num_classes: Optional[int] = None,
-) -> Tuple[float, float, int, float]:
-    """Recipe 3: replace ``omega_ids`` with their quotient class IDs and apply Recipe 1."""
-    qids = np.fromiter(
-        (quotient_map[w] for w in omega_ids), dtype=np.int64, count=len(omega_ids)
-    )
-    return routing_information(qids, y, num_classes=num_classes)
-
-
-# ---------------------------------------------------------------------------
 # Driver
 # ---------------------------------------------------------------------------
 DEFAULT_EPSILONS: Tuple[float, ...] = (
