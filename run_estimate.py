@@ -46,7 +46,7 @@ import pandas as pd
 from src_experiment import smoke
 from src_experiment.dataset import permute_labels
 from src_experiment.functional_quotient import DEFAULT_EPSILONS, FunctionalQuotientEstimator
-from src_experiment.probe_loader import make_composite_insample, make_wbc_probe
+from src_experiment.probe_loader import make_composite_insample, make_wbc_insample
 
 REPO = Path(__file__).resolve().parent
 OUTPUTS = REPO / "outputs"
@@ -66,7 +66,7 @@ def _insample(dataset: str, global_seed: int):
     if dataset == "composite":
         return make_composite_insample(global_seed)
     if dataset == "wbc":
-        return make_wbc_probe(global_seed=global_seed, mode="full")
+        return make_wbc_insample(global_seed)
     raise ValueError(f"no in-sample protocol for {dataset!r}")
 
 

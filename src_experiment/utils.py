@@ -122,12 +122,6 @@ class GaussianDropout(nn.Module):
 # ----------------------------------------------------------------------
 # Filesystem Utilities
 # ----------------------------------------------------------------------
-def createfolders(*dirs: Path) -> None:
-    """Create folders for storing data."""
-    for dir in dirs:
-        dir.mkdir(parents=True, exist_ok=True)
-        
-
 def savefig(fig, path):
     # Convert string to a Path object for easy manipulation
     filepath = Path(path)

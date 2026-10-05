@@ -186,25 +186,18 @@ def run(config_path, overwrite=False):
         
         # --- FIXED CALL HERE ---
         print(f"Starting training on {dataset_name}...")
-        train_results = train_model_multiclass(
+        results_df = train_model_multiclass(
             model=model,
             train_data=train_loader,
             test_data=test_loader,
             epochs=config.get("epochs", 100),
-            num_classes=num_classes,
-            sgd_lr=config.get("learning_rate", 0.01),
-            sgd_mom=config.get("momentum", 0.9),
+            on_save_callback=on_save_callback,
             save_everyth_epoch=config.get("save_interval", None),
             save_for_epochs=config.get("save_epochs", None),
-            on_save_callback=on_save_callback,
-            savepath=None,
-            SAVE_STATES=False,
-            RETURN_STATES=False,
-            disable_progress=True 
+            sgd_lr=config.get("learning_rate", 0.01),
+            sgd_mom=config.get("momentum", 0.9),
+            disable_progress=True,
         )
-        
-        # Safely extract results (works if return is (df,) or (df, dict))
-        results_df = train_results[0]
 
         # 6. Save Final Training Curve
         res_grp = f.create_group('training_results')

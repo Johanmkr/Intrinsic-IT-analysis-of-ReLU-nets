@@ -42,8 +42,7 @@ step1_train.sh          → outputs/<sweep>/<experiment>/seed_<seed>.h5
         ↓
 step2_estimate.sh       → results/routing_<sweep>.csv    (routing MI, all estimators/protocols)
         ↓
-step3_baselines.sh      → results/mi_baselines.csv
-                           results/mnist_fc_baselines.csv
+step3_baselines.sh      → results/baselines_<sweep>.csv  (binning / k-means / KSG grid)
         ↓
 step4_plot.sh           → figures/*.pdf + figures/*.png
 ```
@@ -131,24 +130,25 @@ parallel (`--workers`, default #CPUs − 2).
 
 ---
 
-## Step 3 — MI baselines (`step3_baselines.sh`)
+## Step 3 — MI baselines (`step3_baselines.sh` → `run_baselines.py`)
 
-The runner sweeps three baseline families at each (epoch, layer) cell —
-binning K ∈ {2, 4, 8, 16, 30}, k-means K ∈ {|Y|, 2|Y|, 4|Y|, 16, 64, 256},
-KSG k ∈ {3, 5, 10} — plus optional MINE/InfoNCE critics (disabled by the
-pipeline with `--skip-mine --skip-infonce`) and the routing-estimator columns
-joined as `bits_ours_*`. The figures use:
+For every clean network (Composite, WBC, MNIST), every step-2 protocol — so a
+baseline and the routing estimate it is compared with see the same points —
+and every hidden layer at the last epoch (`--all-epochs` for all), on the
+pre-activations T:
 
-| Baseline | Parameter | Script column |
+| Family | Grid | Columns |
 |---|---|---|
-| Fixed-width binning | K = 8 bins per dimension | `bits_binning_8` |
-| k-means clustering | K = \|Y\| clusters | `bits_kmeans_KKY` |
-| KSG (k-nearest-neighbour) | k = 3 | `bits_ksg_k3` |
+| Uniform per-neuron binning over [−max\|T\|, max\|T\|] | K ∈ {2, 4, 8, 16, 30} | `binning<K>_<estimator>_bits`, `binning<K>_num_cells` |
+| k-means (n_init = 10, seeded by the network seed) | K ∈ {\|Y\|, 2\|Y\|, 4\|Y\|, 16, 64, 256} (labels `KY`, `2KY`, `4KY`, `16`, …) | `kmeans<label>_<estimator>_bits`, `kmeans<label>_num_cells` |
+| KSG / Ross (2014), mixed continuous–discrete | k ∈ {3, 5, 10} | `ksg<k>_bits` (clipped at 0), `ksg<k>_signed_bits` |
 
-For composite and WBC the sweep is restricted to **epoch 150, noise 0.0**,
-which is the only condition used in the paper figures. For MNIST the narrow
-3-layer nets ([3,3,3], [5,5,5], [7,7,7]) are evaluated at epoch 150, all
-hidden layers.
+Binning and k-means are discrete partitions of T, so they are scored with the
+same six estimators as step 2. The figures use binning K = 8 and k-means
+K = |Y| with Miller–Madow, and KSG k = 3.
+
+Output: one CSV per (network, protocol), aggregated into
+`results/baselines_<sweep>.csv`; settings in `results/provenance.json`.
 
 ---
 
@@ -187,10 +187,9 @@ intrinsic_IT_analysis_of_relu_nets/
 │
 ├── run_training.py                ← step 1: training (one config or whole sweeps, parallel)
 ├── run_estimate.py                ← step 2: routing MI, all sweeps/protocols
+├── run_baselines.py               ← step 3: MI baselines, all clean networks/protocols
 │
 ├── scripts/
-│   ├── run_mi_baselines.py        ← baseline sweep (composite + WBC)
-│   ├── run_mnist_fc_baselines.py  ← baseline sweep (MNIST narrow nets)
 │   ├── plot_figure1_pedagogy.py
 │   ├── plot_calibration_scatter.py
 │   ├── plot_layer_profile_last_epoch.py
@@ -212,7 +211,7 @@ intrinsic_IT_analysis_of_relu_nets/
 │   ├── smoke.py                   ← seeds/epochs/PCA dims (full vs ./run.sh smoke)
 │   └── baselines/
 │       ├── activations.py         ← forward-pass activation extraction
-│       └── mi_baselines.py        ← binning / k-means / KSG estimators
+│       └── mi_baselines.py        ← per-neuron binning, KSG
 │
 ├── tests/                         ← ./run.sh test (smoke checkpoints) / --full (outputs/)
 │   ├── test_estimators.py         ← estimators vs hand values, mpmath and infomeasure

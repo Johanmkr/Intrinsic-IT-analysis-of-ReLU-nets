@@ -9,7 +9,7 @@ MNIST uses 3-hidden-layer FC networks on PCA-10 inputs (layers 1-3);
 baselines are not computed for this configuration.
 
 Inputs:
-    results/mi_baselines.csv
+    results/baselines_<sweep>.csv
     results/routing_composite_label_noise.csv
     results/routing_wbc_label_noise.csv
     results/routing_mnist_capacity.csv
@@ -32,7 +32,7 @@ sys.path.append(str(project_root))
 
 from src_experiment.utils import savefig
 from src_experiment.paths import neurips_figpath
-from src_experiment.results import load_routing
+from src_experiment.results import load_baselines, load_routing
 from src_experiment.smoke import LAST_EPOCH
 
 REPO = Path(__file__).resolve().parents[1]
@@ -64,9 +64,9 @@ OURS = [
 ]
 
 BASELINES = [
-    ("bits_binning_8", r"binning $K{=}8$", "tab:gray"),
-    ("bits_kmeans_KKY", r"k-means $K{=}|Y|$", "tab:olive"),
-    ("bits_ksg_k3", r"KSG $k{=}3$", "tab:cyan"),
+    ("binning8_miller_madow_bits", r"binning $K{=}8$", "tab:gray"),
+    ("kmeansKY_miller_madow_bits", r"k-means $K{=}|Y|$", "tab:olive"),
+    ("ksg3_bits", r"KSG $k{=}3$", "tab:cyan"),
 ]
 
 
@@ -92,24 +92,22 @@ def load_ours_mnist() -> pd.DataFrame:
     ].copy()
 
 
-def load_baselines(dataset: str) -> pd.DataFrame:
-    df = pd.read_csv(RESULTS / "mi_baselines.csv")
+def baselines_for(dataset: str) -> pd.DataFrame:
+    df = load_baselines(RESULTS, f"{dataset}_label_noise")
     return df[
-        (df["dataset"] == dataset)
-        & (df["noise_level"] == NOISE)
+        (df["noise_level"] == NOISE)
         & (df["epoch"] == LAST_EPOCH)
         & (df["arch_str"].isin(ARCHS_FIVE))
         & (df["layer"].isin(LAYERS_FIVE))
     ].copy()
 
 
-def load_baselines_mnist() -> pd.DataFrame:
-    path = RESULTS / "mnist_fc_baselines.csv"
-    if not path.exists():
-        return pd.DataFrame()
-    df = pd.read_csv(path)
+def baselines_mnist() -> pd.DataFrame:
+    df = load_baselines(RESULTS, "mnist_capacity")
     return df[
-        (df["arch_str"].isin(ARCHS_MNIST))
+        (df["epoch"] == LAST_EPOCH)
+        & (df["target_dim"] == MNIST_TARGET_DIM)
+        & (df["arch_str"].isin(ARCHS_MNIST))
         & (df["layer"].isin(LAYERS_THREE))
     ].copy()
 
@@ -233,7 +231,7 @@ def main() -> None:
             print(f"[warn] no routing-estimator rows for {ds}")
             continue
         ours_summary[ds] = aggregate(ours, OURS)
-        bs = load_baselines(ds)
+        bs = baselines_for(ds)
         if bs.empty:
             print(f"[warn] no baseline rows for {ds} — Phase 1a may not be done")
         baseline_summary[ds] = aggregate(bs, BASELINES) if not bs.empty else pd.DataFrame()
@@ -244,7 +242,7 @@ def main() -> None:
         print("[warn] no MNIST routing rows — skipping MNIST panel")
     else:
         ours_summary["mnist"] = aggregate(mnist_ours, OURS)
-        mnist_bs = load_baselines_mnist()
+        mnist_bs = baselines_mnist()
         baseline_summary["mnist"] = aggregate(mnist_bs, BASELINES) if not mnist_bs.empty else pd.DataFrame()
         H_Y["mnist"] = float(mnist_ours["H_Y_bits"].mean())
 

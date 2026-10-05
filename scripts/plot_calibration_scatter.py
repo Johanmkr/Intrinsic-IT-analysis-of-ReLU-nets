@@ -5,11 +5,11 @@ scatter plug-in routing MI against each baseline. Diagonal y=x and Pearson r
 show agreement across all conditions.
 
 Inputs:
-    results/mi_baselines.csv
+    results/baselines_{composite,wbc}_label_noise.csv
     results/routing_composite_label_noise.csv
     results/routing_wbc_label_noise.csv
     results/routing_mnist_capacity.csv
-    results/mnist_fc_baselines.csv
+    results/baselines_mnist_capacity.csv
 
 Outputs:
     figures/calibration_scatter_raw.png / .pdf
@@ -29,7 +29,7 @@ sys.path.append(str(project_root))
 
 from src_experiment.utils import savefig
 from src_experiment.paths import neurips_figpath
-from src_experiment.results import load_routing
+from src_experiment.results import load_baselines, load_routing
 from src_experiment.smoke import LAST_EPOCH
 
 REPO = Path(__file__).resolve().parents[1]
@@ -63,9 +63,9 @@ MNIST_FC_LAYER = 3
 MNIST_FC_EPS = 1.0
 
 BASELINES = [
-    ("bits_binning_8",  r"Binning $K{=}8$"),
-    ("bits_kmeans_KKY", r"k-means $K{=}|Y|$"),
-    ("bits_ksg_k3",     r"KSG $k{=}3$"),
+    ("binning8_miller_madow_bits", r"Binning $K{=}8$"),
+    ("kmeansKY_miller_madow_bits", r"k-means $K{=}|Y|$"),
+    ("ksg3_bits",                  r"KSG $k{=}3$"),
 ]
 
 OURS_COL   = "plug_in_bits"
@@ -78,7 +78,7 @@ def _arch_depth(arch_str: str) -> int:
 
 
 def _load_composite_wbc() -> pd.DataFrame:
-    bl = pd.read_csv(RESULTS / "mi_baselines.csv")
+    bl = pd.concat([load_baselines(RESULTS, f"{ds}_label_noise") for ds in DATASETS])
     # Clean-label networks only: the routing estimates below are noise 0, and the
     # merge on (dataset, arch, seed) would otherwise pair them with baselines of
     # label-noise networks.
@@ -107,31 +107,28 @@ def _load_composite_wbc() -> pd.DataFrame:
         frames.append(est)
     est_all = pd.concat(frames, ignore_index=True)
 
-    bl = bl.drop(columns=["bits_ours_plugin", "bits_ours_raw", "bits_ours_func",
-                           "bits_ours_func_plugin"], errors="ignore")
+    bl = bl.drop(columns=[c for c in bl.columns if c.startswith("plug_in")])
     out = bl.merge(est_all, on=["dataset", "arch_str", "seed"],
-                   how="inner").reset_index(drop=True)
+                   how="inner", validate="one_to_one").reset_index(drop=True)
     return out[out[OURS_COL].notna()].copy()
 
 
 def _load_mnist_fc() -> pd.DataFrame:
-    bl_path = RESULTS / "mnist_fc_baselines.csv"
-    est_path = RESULTS / "routing_mnist_capacity.csv"
-    if not bl_path.exists() or not est_path.exists():
-        print("[warn] MNIST FC files missing — skipping")
-        return pd.DataFrame()
-
-    bl = pd.read_csv(bl_path)
+    bl = load_baselines(RESULTS, "mnist_capacity")
+    # Same layer on both axes: the last hidden layer, as for Composite and WBC.
+    bl = bl[(bl["epoch"] == MNIST_FC_EPOCH) & (bl["target_dim"] == MNIST_FC_TARGET_DIM)
+            & (bl["arch_str"].isin(ARCHS_MNIST_FC)) & (bl["layer"] == MNIST_FC_LAYER)]
+    bl = bl[["arch_str", "seed", "layer"] + [col for col, _ in BASELINES]]
     est = load_routing(RESULTS, "mnist_capacity")
     est = est[(est["epoch"] == MNIST_FC_EPOCH)
               & (est["layer"] == MNIST_FC_LAYER)
               & (np.isclose(est["epsilon"], MNIST_FC_EPS))
               & (est["target_dim"] == MNIST_FC_TARGET_DIM)
               & (est["arch_str"].isin(ARCHS_MNIST_FC))][
-        ["arch_str", "seed", OURS_COL]
+        ["arch_str", "seed", "layer", OURS_COL]
     ].copy()
 
-    merged = bl.merge(est, on=["arch_str", "seed"], how="inner")
+    merged = bl.merge(est, on=["arch_str", "seed", "layer"], how="inner", validate="one_to_one")
     merged["dataset"] = "mnist_fc"
     return merged
 

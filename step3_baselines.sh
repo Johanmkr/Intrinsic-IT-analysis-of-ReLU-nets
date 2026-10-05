@@ -1,22 +1,32 @@
 #!/usr/bin/env bash
-# Step 3 — Compute MI baselines (binning K=8, k-means K=|Y|, KSG k=3).
+# Step 3 — MI baselines on the hidden-layer activations (run_baselines.py).
 #
-# Reads the HDF5 checkpoints from step1_train.sh (independent of step 2).
+# For every clean network from step1_train.sh, every step-2 protocol (so the
+# baselines see the same points as the routing estimate) and every hidden
+# layer at the last epoch: binning (K ∈ {2,4,8,16,30}), k-means
+# (K ∈ {|Y|,2|Y|,4|Y|,16,64,256}) — each scored with all six discrete
+# estimators — and KSG (k ∈ {3,5,10}).
 #
-# Output CSVs:
-#   results/mi_baselines.csv           — composite + WBC, all layers/epochs
-#   results/mnist_fc_baselines.csv     — MNIST narrow nets, last epoch
+# Output:
+#   outputs/<sweep>/<experiment>/baselines_seed_<s>_<protocol>.csv     (per job)
+#   results/baselines_{composite_label_noise,wbc_label_noise,mnist_capacity}.csv
+#   results/provenance.json
 #
 # Usage:
-#   ./step3_baselines.sh           # run all baselines, skip already-done
-#   ./step3_baselines.sh --force   # recompute
+#   ./step3_baselines.sh                # skip already-done jobs
+#   ./step3_baselines.sh --force        # recompute
+#   ./step3_baselines.sh --workers 8    # limit parallelism (default: #CPUs − 2)
 
 set -euo pipefail
 cd "$(dirname "$0")"
 
-FORCE=""
-for arg in "$@"; do
-  [[ "$arg" == "--force" ]] && FORCE="--force"
+ARGS=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --force) ARGS+=(--force); shift ;;
+    --workers) ARGS+=(--workers "$2"); shift 2 ;;
+    *) shift ;;
+  esac
 done
 
 PYTHON="uv run python"
@@ -24,31 +34,15 @@ TS=$(date +"%Y%m%d_%H%M%S")
 LOG="logs/step3_baselines_${TS}.log"
 mkdir -p logs results
 
+# One BLAS/OpenMP thread per worker process (k-means and KD-trees included).
+export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
+
 banner() { echo ""; echo "=== $1 ==="; echo ""; }
 
-# Last training epoch (150; 10 in ./run.sh smoke), from src_experiment/smoke.py.
-LAST_EPOCH=$($PYTHON -c "from src_experiment.smoke import LAST_EPOCH; print(LAST_EPOCH)")
+banner "MI baselines — clean networks, all protocols, last epoch" | tee -a "$LOG"
+$PYTHON run_baselines.py "${ARGS[@]}" 2>&1 | tee -a "$LOG"
 
-# ── Composite + WBC baselines ─────────────────────────────────────────────────
-# Restrict to last epoch (150) and noise=0 to limit compute.
-# The paper only uses these conditions in all figures.
-banner "MI baselines — composite + WBC (epoch $LAST_EPOCH, noise 0, all layers)" | tee -a "$LOG"
-$PYTHON scripts/run_mi_baselines.py \
-    --datasets composite wbc \
-    --noise 0.0 \
-    --epoch-filter "$LAST_EPOCH" \
-    --skip-mine --skip-infonce \
-    $FORCE 2>&1 | tee -a "$LOG"
-
-banner "Aggregating mi_baselines.csv" | tee -a "$LOG"
-$PYTHON scripts/run_mi_baselines.py \
-    --aggregate --output results/mi_baselines.csv \
-    2>&1 | tee -a "$LOG"
-
-# ── MNIST FC baselines ────────────────────────────────────────────────────────
-banner "MI baselines — MNIST FC narrow nets (epoch $LAST_EPOCH, all layers)" | tee -a "$LOG"
-$PYTHON scripts/run_mnist_fc_baselines.py 2>&1 | tee -a "$LOG"
+banner "Aggregating" | tee -a "$LOG"
+$PYTHON run_baselines.py --aggregate 2>&1 | tee -a "$LOG"
 
 banner "Step 3 complete — log: $LOG"
-echo "Results written to:"
-ls -lh results/*.csv 2>/dev/null | tee -a "$LOG"
