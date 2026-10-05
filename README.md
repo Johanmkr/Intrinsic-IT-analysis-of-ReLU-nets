@@ -20,12 +20,13 @@ Everything runs from this directory; no Julia, no geometric-tree computation.
 ```bash
 ./run.sh setup     # uv sync + download MNIST into data/
 ./run.sh smoke     # whole pipeline on a tiny sweep in smoke/ (~5 min) — checks the code runs
-./run.sh all       # full pipeline → figures/ (6–8 h on a multi-core CPU)
+./run.sh all       # full pipeline → results/ + figures/ (hours; dominated by training)
 ./run.sh test      # unit tests on the smoke checkpoints (~4 min); --full: on outputs/
 ```
 
-`./run.sh step1` … `./run.sh step4` run single steps; `all` and the steps accept `--force`
-to recompute. Wall time is dominated by training 210 models in step 1.
+`./run.sh step1` … `./run.sh step5` run single steps; `all` and the steps accept `--force`
+to recompute and `--workers N` to limit parallelism (default: #CPUs − 2). Wall time is
+dominated by training the 230 networks of step 1.
 
 The smoke run uses one seed, 11 epochs and PCA dims {2, 10} (`src_experiment/smoke.py`)
 and writes everything under `smoke/`, never touching `outputs/`, `results/` or `figures/`.
@@ -44,7 +45,11 @@ step2_estimate.sh       → results/routing_<sweep>.csv    (routing MI, all esti
         ↓
 step3_baselines.sh      → results/baselines_<sweep>.csv  (binning / k-means / KSG grid)
         ↓
-step4_plot.sh           → figures/*.pdf + figures/*.png
+step4_diagnostics.sh    → results/region_sizes_<sweep>.csv, results/ordering_<sweep>.csv
+        ↓
+step5_plot.sh           → figures/*.pdf + figures/*.png
+
+results/provenance.json — git commit, settings and row counts of steps 2–4
 ```
 
 Each step is **resumable**: already-completed work is detected and skipped.
@@ -152,7 +157,23 @@ Output: one CSV per (network, protocol), aggregated into
 
 ---
 
-## Step 4 — Figures (`step4_plot.sh`)
+## Step 4 — Diagnostics (`step4_diagnostics.sh` → `run_diagnostics.py`)
+
+At the last epoch:
+
+- **Region sizes** — for every network, protocol and hidden layer, the number
+  of data-supported regions holding 1, 2, 3, … points
+  (`results/region_sizes_<sweep>.csv`, long format: `region_size`, `num_regions`).
+- **Quotient ordering sensitivity** — the functional quotient visits regions in
+  first-encounter order (`order` = 0). For every clean network, on the held-out
+  points, every hidden layer and ε ∈ {0.1, 0.3, 0.5, 1.0}, it is recomputed
+  under 15 random visiting orders (`order` = k uses random seed k), with
+  `num_quotient` and every `<estimator>_func_bits` (`results/ordering_<sweep>.csv`).
+  Order 0 reproduces step 2 exactly.
+
+---
+
+## Step 5 — Figures (`step5_plot.sh`)
 
 All figures are written to `figures/` as both `.pdf` and `.png`.
 
@@ -173,11 +194,12 @@ All figures are written to `figures/` as both `.pdf` and `.png`.
 intrinsic_IT_analysis_of_relu_nets/
 ├── README.md                      ← this file
 ├── run.sh                         ← entry point (setup/test/smoke/all/stepN)
-├── run_all.sh                     ← steps 1–4 end-to-end
+├── run_all.sh                     ← steps 1–5 end-to-end
 ├── step1_train.sh                 ← train 210 models
 ├── step2_estimate.sh              ← compute routing MI
 ├── step3_baselines.sh             ← compute MI baselines
-├── step4_plot.sh                  ← generate figures
+├── step4_diagnostics.sh           ← region sizes, quotient ordering sensitivity
+├── step5_plot.sh                  ← generate figures
 │
 ├── configs/
 │   ├── generate_composite.py      ← generates configs/composite_label_noise/
@@ -188,6 +210,7 @@ intrinsic_IT_analysis_of_relu_nets/
 ├── run_training.py                ← step 1: training (one config or whole sweeps, parallel)
 ├── run_estimate.py                ← step 2: routing MI, all sweeps/protocols
 ├── run_baselines.py               ← step 3: MI baselines, all clean networks/protocols
+├── run_diagnostics.py             ← step 4: region sizes, ordering sensitivity
 │
 ├── scripts/
 │   ├── plot_figure1_pedagogy.py

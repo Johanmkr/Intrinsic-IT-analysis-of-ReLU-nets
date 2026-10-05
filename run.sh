@@ -5,17 +5,18 @@
 #   ./run.sh setup              # uv sync + download MNIST into data/
 #   ./run.sh test [--full]      # unit tests on the smoke checkpoints (--full: on outputs/)
 #   ./run.sh smoke              # whole pipeline on a tiny sweep, in smoke/ (minutes)
-#   ./run.sh all [--force]      # steps 1-4 (6-8 h on a multi-core CPU)
+#   ./run.sh all [--force]      # steps 1-5 (hours; dominated by training)
 #   ./run.sh step1 [--force]    # train            → outputs/
 #   ./run.sh step2 [--force]    # routing MI       → results/routing_<sweep>.csv
-#   ./run.sh step3 [--force]    # MI baselines     → results/*baselines.csv
-#   ./run.sh step4              # figures          → figures/
+#   ./run.sh step3 [--force]    # MI baselines     → results/baselines_<sweep>.csv
+#   ./run.sh step4 [--force]    # diagnostics      → results/{region_sizes,ordering}_<sweep>.csv
+#   ./run.sh step5              # figures          → figures/
 
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 
-usage() { sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; }
 
 cmd="${1:-}"
 [[ $# -gt 0 ]] && shift
@@ -66,7 +67,8 @@ print('MNIST ready in data/')"
   step1) ./step1_train.sh "$@" ;;
   step2) ./step2_estimate.sh "$@" ;;
   step3) ./step3_baselines.sh "$@" ;;
-  step4) ./step4_plot.sh "$@" ;;
+  step4) ./step4_diagnostics.sh "$@" ;;
+  step5) ./step5_plot.sh "$@" ;;
   -h|--help|help|"")
     usage
     ;;
