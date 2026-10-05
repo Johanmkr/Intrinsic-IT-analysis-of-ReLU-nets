@@ -1,7 +1,9 @@
 # Intrinsic Information Theoretic Analysis of ReLU Nets — code
 
-End-to-end pipeline to reproduce all six figures in the NeurIPS 2026 paper.
-Everything runs from this directory; no Julia, no geometric-tree computation.
+Experiment suite for the NeurIPS 2026 paper: trains every network, computes every
+estimate (routing information with six estimators, functional quotient, MI baselines,
+diagnostics), stores all results in `results/`, and draws the figures from them.
+Everything runs from this directory with one command per step.
 
 ---
 
@@ -10,8 +12,9 @@ Everything runs from this directory; no Julia, no geometric-tree computation.
 - Python ≥ 3.12 with [uv](https://github.com/astral-sh/uv) installed. No GPU and no Julia.
 - Internet access on the **first run** only: WBC is fetched from the UCI repository and
   MNIST is downloaded via torchvision (`./run.sh setup` does the download up front).
-- The rebuttal's extra bias corrections (Exp 10) need `infomeasure`, which is AGPL-3.0
-  and therefore not part of the default install: `uv sync --group rebuttal`.
+- All estimators are implemented in this repository. `infomeasure` (AGPL-3.0, used for
+  the rebuttal) is only needed to run the cross-check in `tests/test_estimators.py`:
+  `uv sync --group rebuttal`; without it that comparison is skipped.
 
 ---
 
@@ -90,8 +93,9 @@ Each `seed_<seed>.h5` stores:
 - `metadata/` — experiment config as HDF5 attributes
 - `epochs/epoch_N/l{i}.weight`, `l{i}.bias` — per-hidden-layer weights at each
   saved epoch (PyTorch convention: `W[i].shape == (n_{i+1}, n_i)`)
-- `epochs/epoch_N/{train_acc,test_acc,…}` — training metrics
-- `points[N, d]`, `labels[N]` — held-out test set
+- `epochs/epoch_N` attributes — train/test loss and accuracy at that epoch
+- `training_results/` — the same six curves for every epoch (used for App. F)
+- `points[N, d]`, `labels[N]` — the test split (never trained on; the `heldout` protocol)
 
 ---
 
@@ -180,11 +184,17 @@ All figures are written to `figures/` as both `.pdf` and `.png`.
 | File | Script | Description |
 |---|---|---|
 | `pedagogical_figure1` | `scripts/plot_figure1_pedagogy.py` | Trains a tiny 2→4→4→2 network on moons; shows hyperplane partition and activation-pattern encoding |
-| `calibration_scatter_raw` | `scripts/plot_calibration_scatter.py` | Each baseline (x) vs plug-in routing MI (y); n=75 points across 3 datasets; Pearson r annotated |
+| `calibration_scatter_raw` | `scripts/plot_calibration_scatter.py` | Each baseline (x) vs plug-in routing MI (y), one point per clean network (n = 75: same held-out points, last layer, last epoch on both axes); Pearson r annotated |
 | `layer_profile_last_epoch` | `scripts/plot_layer_profile_last_epoch.py` | Bits vs layer depth at last epoch; averaged over archs and seeds; ±1σ shading; three datasets |
 | `mnist_capacity_bars_per_arch` | `scripts/plot_mnist_capacity_bars.py` | Grouped bars: I_raw and I_func(ε) vs PCA dim; 2×2 grid of arch panels |
 | `mnist_rho_vs_eps` | `scripts/plot_mnist_functional_pca_sweep.py --type rho` | ρ_func vs ε at last epoch; 1×4 arch panels (one per width); lines per PCA dim |
 | `rho_func_layerwise` | `scripts/plot_rho_func_layerwise.py` | ρ_func by layer for ε ∈ {0, 0.1, 0.3, 0.5, 1.0, 2.0}; three dataset panels |
+| `composite_dataset` | `scripts/plot_composite_dataset.py` | App. B: the Composite training split after scaling, coloured by class |
+| `training_curves_{composite,wbc,mnist}` | `scripts/plot_training_curves.py` | App. F: test accuracy and loss over epochs (mean ± std over seeds) |
+
+The figures use the `heldout` protocol with `true_labels`. The bias-correction,
+label-permutation, held-out-vs-in-sample, baseline-grid, region-size and ordering
+results of steps 2–4 are stored in `results/` but not yet drawn as figures or tables.
 
 ---
 
@@ -195,7 +205,7 @@ intrinsic_IT_analysis_of_relu_nets/
 ├── README.md                      ← this file
 ├── run.sh                         ← entry point (setup/test/smoke/all/stepN)
 ├── run_all.sh                     ← steps 1–5 end-to-end
-├── step1_train.sh                 ← train 210 models
+├── step1_train.sh                 ← train 230 models
 ├── step2_estimate.sh              ← compute routing MI
 ├── step3_baselines.sh             ← compute MI baselines
 ├── step4_diagnostics.sh           ← region sizes, quotient ordering sensitivity
@@ -218,7 +228,9 @@ intrinsic_IT_analysis_of_relu_nets/
 │   ├── plot_layer_profile_last_epoch.py
 │   ├── plot_mnist_capacity_bars.py
 │   ├── plot_mnist_functional_pca_sweep.py
-│   └── plot_rho_func_layerwise.py
+│   ├── plot_rho_func_layerwise.py
+│   ├── plot_composite_dataset.py
+│   └── plot_training_curves.py
 │
 ├── src_experiment/                ← Python package (estimators + training)
 │   ├── dataset.py                 ← data loading (composite, WBC, MNIST)
@@ -227,7 +239,7 @@ intrinsic_IT_analysis_of_relu_nets/
 │   ├── utils.py                   ← NeuralNet, savefig
 │   ├── routing_estimator.py       ← regions Ω_D: forward pass + pattern hashing
 │   ├── estimators.py              ← plug-in, MM, Grassberger, Chao–Shen, CWJ, ANSB
-│   ├── results.py                 ← loads results/routing_<sweep>.csv by protocol
+│   ├── results.py                 ← loads results/{routing,baselines}_<sweep>.csv by protocol
 │   ├── functional_quotient.py     ← ε-functional quotient + per-network estimates (step 2)
 │   ├── probe_loader.py            ← in-sample / probe sets per dataset
 │   ├── paths.py                   ← figure output path (→ figures/)
@@ -242,8 +254,8 @@ intrinsic_IT_analysis_of_relu_nets/
 │   ├── test_label_permutation.py  ← step 2 rebuilds the permuted training labels
 │   └── test_parx_partitions.py    ← region code cross-checked against parx
 ├── outputs/                       ← created by step 1 (HDF5 checkpoints)
-├── results/                       ← created by steps 2–3 (aggregated CSVs)
-├── figures/                       ← created by step 4 (PDF + PNG)
+├── results/                       ← created by steps 2–4 (aggregated CSVs + provenance.json)
+├── figures/                       ← created by step 5 (PDF + PNG)
 └── logs/                          ← timestamped log files per step
 ```
 
@@ -252,17 +264,28 @@ intrinsic_IT_analysis_of_relu_nets/
 ## Design notes
 
 - **No Julia required.** The routing estimator computes activation patterns
-  directly from network weights via a standard ReLU forward pass. The Julia
-  geometric analysis (polytope enumeration) used elsewhere in the repo is not
-  needed for any paper figure.
+  directly from network weights via a standard ReLU forward pass; no polytope
+  enumeration is needed. (`tests/test_parx_partitions.py` cross-checks the
+  regions against the `parx` partition package.)
 
-- **HDF5 as checkpoint format.** The training loop saves weights and test data
-  to HDF5 at each desired epoch. The estimators read only the weight tensors
-  and stored test set; no geometric tree data is stored or read.
+- **HDF5 as checkpoint format.** The training loop saves weights, curves and
+  the test split to HDF5. Every later step reads only these files (plus the
+  regenerated in-sample sets), so steps 2–5 can be rerun without retraining.
 
 - **Determinism.** Global seed 42 controls all data splits and shuffles.
   Model seed (101–105) controls weight initialisation only. Both seeds are
   set independently across PyTorch, NumPy, and Python random.
 
-- **Probe independence.** All estimates use the stored 20 % test split
-  (Composite, WBC) or the MNIST test set, which the networks never trained on.
+- **Protocols are explicit.** Every result row records its `protocol`
+  (`heldout`, `insample`, `train`) and `labels`, and the figure scripts select
+  them through `src_experiment/results.py`, so results from different point
+  sets are never mixed. Merges between steps are checked one-to-one.
+
+- **Parallel and resumable.** Steps 1–4 run one job per network (and protocol)
+  in parallel and write each result atomically, so an interrupted step resumes
+  where it stopped; `--force` recomputes. `results/provenance.json` records the
+  git commit and settings that produced the aggregated results.
+
+- **Smoke mode.** `src_experiment/smoke.py` holds the sweep sizes; with
+  `SMOKE=1` (`./run.sh smoke`) every step runs on one seed, 11 epochs and two
+  PCA dimensions under `smoke/`, and `./run.sh test` checks the code against it.

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Step 5 — Generate all paper figures from the results CSVs.
+# Step 5 — Generate the paper figures from the stored results.
 #
-# Reads:  results/*.csv
+# Reads:  results/*.csv (steps 2–4), outputs/**/seed_*.h5 (training curves)
 # Writes: figures/*.pdf and figures/*.png
 #
 # Figures produced:
@@ -11,6 +11,8 @@
 #   mnist_capacity_bars_per_arch.{pdf,png} — I_raw vs I_func across PCA dims
 #   mnist_rho_vs_eps.{pdf,png}          — ρ_func vs ε per architecture
 #   rho_func_layerwise.{pdf,png}        — ρ_func by depth for multiple ε
+#   composite_dataset.{pdf,png}         — App. B: the Composite dataset
+#   training_curves_{composite,wbc,mnist}.{pdf,png} — App. F: test accuracy / loss
 #
 # Usage:
 #   ./step5_plot.sh
@@ -42,6 +44,12 @@ $PYTHON scripts/plot_mnist_functional_pca_sweep.py --type rho 2>&1 | tee -a "$LO
 
 banner "ρ_func layerwise (all three datasets)" | tee -a "$LOG"
 $PYTHON scripts/plot_rho_func_layerwise.py 2>&1 | tee -a "$LOG"
+
+banner "Composite dataset (App. B)" | tee -a "$LOG"
+$PYTHON scripts/plot_composite_dataset.py 2>&1 | tee -a "$LOG"
+
+banner "Training curves (App. F)" | tee -a "$LOG"
+$PYTHON scripts/plot_training_curves.py 2>&1 | tee -a "$LOG"
 
 banner "Step 5 complete — log: $LOG"
 echo "Figures written to figures/:"
