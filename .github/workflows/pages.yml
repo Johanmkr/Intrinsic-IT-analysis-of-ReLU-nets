@@ -20,6 +20,8 @@ concurrency:
 
 jobs:
   deploy:
+    # Skipped while the repository is private (Pages is not available there).
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-24.04
     environment:
       name: github-pages

@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.2.0  # astral publishes full version tags only
         with:
           enable-cache: true
       # rebuttal group: infomeasure, for the estimator cross-check in tests/test_estimators.py
@@ -34,7 +34,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.2.0  # astral publishes full version tags only
         with:
           enable-cache: true
       - run: uv sync --frozen
@@ -62,7 +62,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.2.0  # astral publishes full version tags only
         with:
           enable-cache: true
       - name: Cache MNIST and WBC
