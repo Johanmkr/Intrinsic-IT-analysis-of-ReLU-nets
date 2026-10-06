@@ -5,11 +5,11 @@ scatter plug-in routing MI against each baseline. Diagonal y=x and Pearson r
 show agreement across all conditions.
 
 Inputs:
-    results/baselines_{composite,wbc}_label_noise.csv
-    results/routing_composite_label_noise.csv
-    results/routing_wbc_label_noise.csv
-    results/routing_mnist_capacity.csv
-    results/baselines_mnist_capacity.csv
+    results/baselines_{composite,wbc}_label_noise.csv.gz
+    results/routing_composite_label_noise.csv.gz
+    results/routing_wbc_label_noise.csv.gz
+    results/routing_mnist_capacity.csv.gz
+    results/baselines_mnist_capacity.csv.gz
 
 Outputs:
     figures/calibration_scatter_raw.png / .pdf

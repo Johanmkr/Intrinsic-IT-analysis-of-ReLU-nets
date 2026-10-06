@@ -9,7 +9,7 @@
 #
 # Output:
 #   outputs/<sweep>/<experiment>/baselines_seed_<s>_<protocol>.csv     (per job)
-#   results/baselines_{composite_label_noise,wbc_label_noise,mnist_capacity}.csv
+#   results/baselines_{composite_label_noise,wbc_label_noise,mnist_capacity}.csv.gz
 #   results/provenance.json
 #
 # Usage:

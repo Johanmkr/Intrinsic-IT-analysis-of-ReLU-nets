@@ -15,7 +15,7 @@ Usage
     funcmm  functional Miller-Madow vs eps   (secondary)
 
 Inputs:
-    results/routing_mnist_capacity.csv
+    results/routing_mnist_capacity.csv.gz
 
 Outputs:
     figures/mnist_{type}_vs_eps.png / .pdf

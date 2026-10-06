@@ -7,9 +7,9 @@
 #   ./run.sh smoke              # whole pipeline on a tiny sweep, in smoke/ (minutes)
 #   ./run.sh all [--force]      # steps 1-5 (hours; dominated by training)
 #   ./run.sh step1 [--force]    # train            → outputs/
-#   ./run.sh step2 [--force]    # routing MI       → results/routing_<sweep>.csv
-#   ./run.sh step3 [--force]    # MI baselines     → results/baselines_<sweep>.csv
-#   ./run.sh step4 [--force]    # diagnostics      → results/{region_sizes,ordering}_<sweep>.csv
+#   ./run.sh step2 [--force]    # routing MI       → results/routing_<sweep>.csv.gz
+#   ./run.sh step3 [--force]    # MI baselines     → results/baselines_<sweep>.csv.gz
+#   ./run.sh step4 [--force]    # diagnostics      → results/{region_sizes,ordering}_<sweep>.csv.gz
 #   ./run.sh step5              # figures          → figures/
 
 set -euo pipefail

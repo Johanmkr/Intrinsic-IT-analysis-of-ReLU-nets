@@ -1,0 +1,234 @@
+{
+  "step2_estimate": {
+    "created": "2026-10-05T12:12:11+00:00",
+    "git_commit": "e4f22a887b17ded6590afaf411e6b29d08b02dcb",
+    "git_dirty": true,
+    "smoke": false,
+    "jobs_per_network": {
+      "composite_label_noise": [
+        "heldout/true_labels",
+        "insample/true_labels"
+      ],
+      "wbc_label_noise": [
+        "heldout/true_labels",
+        "insample/true_labels"
+      ],
+      "mnist_capacity": [
+        "heldout/true_labels"
+      ],
+      "label_permutation": [
+        "heldout/true_labels",
+        "insample/true_labels",
+        "train/true_labels",
+        "train/train_labels"
+      ]
+    },
+    "python": "3.13.1",
+    "numpy": "2.4.4",
+    "pandas": "3.0.2",
+    "sweeps": {
+      "composite_label_noise": {
+        "rows": 79200,
+        "networks": 30,
+        "protocols": [
+          "heldout",
+          "insample"
+        ],
+        "epsilons": [
+          0.0,
+          0.01,
+          0.05,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0,
+          1.5,
+          2.0
+        ],
+        "missing_jobs": 0
+      },
+      "wbc_label_noise": {
+        "rows": 79200,
+        "networks": 30,
+        "protocols": [
+          "heldout",
+          "insample"
+        ],
+        "epsilons": [
+          0.0,
+          0.01,
+          0.05,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0,
+          1.5,
+          2.0
+        ],
+        "missing_jobs": 0
+      },
+      "mnist_capacity": {
+        "rows": 148500,
+        "networks": 150,
+        "protocols": [
+          "heldout"
+        ],
+        "epsilons": [
+          0.0,
+          0.01,
+          0.05,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0,
+          1.5,
+          2.0
+        ],
+        "missing_jobs": 0
+      },
+      "label_permutation": {
+        "rows": 79200,
+        "networks": 10,
+        "protocols": [
+          "heldout",
+          "insample",
+          "train"
+        ],
+        "epsilons": [
+          0.0,
+          0.01,
+          0.05,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0,
+          1.5,
+          2.0
+        ],
+        "missing_jobs": 0
+      }
+    }
+  },
+  "step3_baselines": {
+    "created": "2026-10-05T12:52:50+00:00",
+    "git_commit": "a4516671da17ddbf3bd758de3ac539f4fa3c1033",
+    "git_dirty": true,
+    "binning_bins": [
+      2,
+      4,
+      8,
+      16,
+      30
+    ],
+    "kmeans_fixed_K": [
+      16,
+      64,
+      256
+    ],
+    "ksg_k": [
+      3,
+      5,
+      10
+    ],
+    "sweeps": {
+      "composite_label_noise": {
+        "rows": 240,
+        "protocols": [
+          "heldout",
+          "insample"
+        ],
+        "epochs": [
+          150
+        ],
+        "missing_jobs": 0
+      },
+      "wbc_label_noise": {
+        "rows": 240,
+        "protocols": [
+          "heldout",
+          "insample"
+        ],
+        "epochs": [
+          150
+        ],
+        "missing_jobs": 0
+      },
+      "mnist_capacity": {
+        "rows": 450,
+        "protocols": [
+          "heldout"
+        ],
+        "epochs": [
+          150
+        ],
+        "missing_jobs": 0
+      }
+    }
+  },
+  "step4_diagnostics": {
+    "created": "2026-10-05T13:17:55+00:00",
+    "git_commit": "62cb71dc86ef109862a2d8fa5837e7e95c489756",
+    "git_dirty": true,
+    "ordering_epsilons": [
+      0.1,
+      0.3,
+      0.5,
+      1.0
+    ],
+    "random_orders": 15,
+    "files": {
+      "region_sizes_composite_label_noise": {
+        "rows": 11050,
+        "missing_jobs": 0
+      },
+      "ordering_composite_label_noise": {
+        "rows": 7680,
+        "missing_jobs": 0
+      },
+      "region_sizes_wbc_label_noise": {
+        "rows": 2446,
+        "missing_jobs": 0
+      },
+      "ordering_wbc_label_noise": {
+        "rows": 7680,
+        "missing_jobs": 0
+      },
+      "region_sizes_mnist_capacity": {
+        "rows": 19611,
+        "missing_jobs": 0
+      },
+      "ordering_mnist_capacity": {
+        "rows": 28800,
+        "missing_jobs": 0
+      },
+      "region_sizes_label_permutation": {
+        "rows": 6620,
+        "missing_jobs": 0
+      }
+    }
+  }
+}

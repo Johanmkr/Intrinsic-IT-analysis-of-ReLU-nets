@@ -6,7 +6,7 @@ routing MI with every estimator in :mod:`src_experiment.estimators`, at every
 saved epoch and hidden layer. One CSV per (network, protocol) is written next
 to the HDF5 (``routing_seed_<s>_<protocol>.csv``); existing ones are skipped
 unless ``--force``. ``--aggregate`` concatenates them into
-``results/routing_<sweep>.csv`` and writes ``results/provenance.json``.
+``results/routing_<sweep>.csv.gz`` and writes ``results/provenance.json``.
 
 Protocols (``protocol`` column):
   heldout   the test split stored in the HDF5 (never trained on):
@@ -47,6 +47,7 @@ from src_experiment import smoke
 from src_experiment.dataset import permute_labels
 from src_experiment.functional_quotient import DEFAULT_EPSILONS, FunctionalQuotientEstimator
 from src_experiment.probe_loader import make_composite_insample, make_wbc_insample
+from src_experiment.results import SUFFIX, write_table
 
 REPO = Path(__file__).resolve().parent
 OUTPUTS = REPO / "outputs"
@@ -172,8 +173,8 @@ def aggregate(sweeps: List[str]) -> None:
         if not frames:
             continue
         df = pd.concat(frames, ignore_index=True)
-        out = RESULTS / f"routing_{sweep}.csv"
-        df.to_csv(out, index=False)
+        out = RESULTS / f"routing_{sweep}{SUFFIX}"
+        write_table(df, out)
         summary[sweep] = {
             "rows": len(df),
             "networks": int(df.groupby(["arch_str", "target_dim", "noise_level", "seed"]).ngroups),

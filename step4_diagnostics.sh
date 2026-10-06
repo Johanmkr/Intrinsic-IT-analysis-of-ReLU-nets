@@ -7,8 +7,8 @@
 # the held-out points.
 #
 # Output:
-#   results/region_sizes_<sweep>.csv
-#   results/ordering_{composite_label_noise,wbc_label_noise,mnist_capacity}.csv
+#   results/region_sizes_<sweep>.csv.gz
+#   results/ordering_{composite_label_noise,wbc_label_noise,mnist_capacity}.csv.gz
 #   results/provenance.json
 #
 # Usage:

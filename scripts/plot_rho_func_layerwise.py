@@ -11,9 +11,9 @@ architectures and seeds. Panel titles give N, the number of evaluated points
 (held-out protocol), read from the results.
 
 Inputs:
-    results/routing_composite_label_noise.csv
-    results/routing_wbc_label_noise.csv
-    results/routing_mnist_capacity.csv
+    results/routing_composite_label_noise.csv.gz
+    results/routing_wbc_label_noise.csv.gz
+    results/routing_mnist_capacity.csv.gz
 
 Outputs:
     figures/rho_func_layerwise.png / .pdf

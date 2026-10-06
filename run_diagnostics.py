@@ -2,13 +2,13 @@
 
 region sizes   For every network (all sweeps), every step-2 protocol and every
                hidden layer: how many regions hold 1, 2, 3, ... points.
-               → results/region_sizes_<sweep>.csv  (columns ..., region_size, num_regions)
+               → results/region_sizes_<sweep>.csv.gz  (columns ..., region_size, num_regions)
 ordering       The functional quotient visits regions in first-encounter order
                (order 0). For every clean network, on the held-out points, every
                hidden layer and ε ∈ ORDER_EPSILONS, the quotient is recomputed
                under N_ORDERS random visiting orders (order k uses random seed k)
                and scored with every estimator.
-               → results/ordering_<sweep>.csv
+               → results/ordering_<sweep>.csv.gz
 
 One CSV per (network, protocol, kind) next to the HDF5; ``--aggregate``
 concatenates them.
@@ -40,6 +40,7 @@ from src_experiment.functional_quotient import (
     cluster_functional,
     collect_unique_region_patterns,
 )
+from src_experiment.results import SUFFIX, write_table
 from src_experiment.routing_estimator import (
     RoutingEstimator,
     cumulative_pattern_hashes,
@@ -148,8 +149,8 @@ def aggregate(sweeps: List[str]) -> None:
             if not frames:
                 continue
             df = pd.concat(frames, ignore_index=True)
-            out = RESULTS / f"{kind}_{sweep}.csv"
-            df.to_csv(out, index=False)
+            out = RESULTS / f"{kind}_{sweep}{SUFFIX}"
+            write_table(df, out)
             summary[f"{kind}_{sweep}"] = {"rows": len(df), "missing_jobs": len(missing)}
             print(f"wrote {len(df)} rows to {out.relative_to(RESULTS.parent)}")
     path = RESULTS / "provenance.json"

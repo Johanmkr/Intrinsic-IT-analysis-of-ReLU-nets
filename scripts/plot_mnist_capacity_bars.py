@@ -7,7 +7,7 @@ For each PCA dim, one bar group containing:
 One output figure: 2×2 grid, one panel per architecture.
 
 Inputs:
-    results/routing_mnist_capacity.csv
+    results/routing_mnist_capacity.csv.gz
 
 Outputs:
     figures/mnist_capacity_bars_per_arch.png / .pdf

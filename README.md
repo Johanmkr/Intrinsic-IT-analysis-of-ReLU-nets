@@ -44,11 +44,11 @@ configs/generate_*.py   → YAML configs
         ↓
 step1_train.sh          → outputs/<sweep>/<experiment>/seed_<seed>.h5
         ↓
-step2_estimate.sh       → results/routing_<sweep>.csv    (routing MI, all estimators/protocols)
+step2_estimate.sh       → results/routing_<sweep>.csv.gz   (routing MI, all estimators/protocols)
         ↓
-step3_baselines.sh      → results/baselines_<sweep>.csv  (binning / k-means / KSG grid)
+step3_baselines.sh      → results/baselines_<sweep>.csv.gz  (binning / k-means / KSG grid)
         ↓
-step4_diagnostics.sh    → results/region_sizes_<sweep>.csv, results/ordering_<sweep>.csv
+step4_diagnostics.sh    → results/region_sizes_<sweep>.csv.gz, results/ordering_<sweep>.csv.gz
         ↓
 step5_plot.sh           → figures/*.pdf + figures/*.png
 
@@ -57,6 +57,10 @@ results/provenance.json — git commit, settings and row counts of steps 2–4
 
 Each step is **resumable**: already-completed work is detected and skipped.
 Pass `--force` to recompute from scratch.
+
+`results/` (gzipped CSVs, read directly by `pandas.read_csv`, plus
+`provenance.json`) is tracked in git, so the figures can be redrawn with step 5
+alone. `outputs/` (checkpoints and per-job CSVs) is not tracked.
 
 ---
 
@@ -133,7 +137,7 @@ every other row has `labels` = `true_labels`.
 The figures use `heldout` with `true_labels` (`src_experiment/results.py`).
 
 Output: one CSV per (network, protocol) next to its HDF5, aggregated into
-`results/routing_<sweep>.csv` (one row per network × protocol × epoch × layer
+`results/routing_<sweep>.csv.gz` (one row per network × protocol × epoch × layer
 × ε; estimator columns `<estimator>_bits` and `<estimator>_func_bits`), and
 `results/provenance.json` (git commit, settings, row counts). Jobs run in
 parallel (`--workers`, default #CPUs − 2).
@@ -158,7 +162,7 @@ same six estimators as step 2. The figures use binning K = 8 and k-means
 K = |Y| with Miller–Madow, and KSG k = 3.
 
 Output: one CSV per (network, protocol), aggregated into
-`results/baselines_<sweep>.csv`; settings in `results/provenance.json`.
+`results/baselines_<sweep>.csv.gz`; settings in `results/provenance.json`.
 
 ---
 
@@ -168,12 +172,12 @@ At the last epoch:
 
 - **Region sizes** — for every network, protocol and hidden layer, the number
   of data-supported regions holding 1, 2, 3, … points
-  (`results/region_sizes_<sweep>.csv`, long format: `region_size`, `num_regions`).
+  (`results/region_sizes_<sweep>.csv.gz`, long format: `region_size`, `num_regions`).
 - **Quotient ordering sensitivity** — the functional quotient visits regions in
   first-encounter order (`order` = 0). For every clean network, on the held-out
   points, every hidden layer and ε ∈ {0.1, 0.3, 0.5, 1.0}, it is recomputed
   under 15 random visiting orders (`order` = k uses random seed k), with
-  `num_quotient` and every `<estimator>_func_bits` (`results/ordering_<sweep>.csv`).
+  `num_quotient` and every `<estimator>_func_bits` (`results/ordering_<sweep>.csv.gz`).
   Order 0 reproduces step 2 exactly.
 
 ---
@@ -240,7 +244,7 @@ intrinsic_IT_analysis_of_relu_nets/
 │   ├── utils.py                   ← NeuralNet, savefig
 │   ├── routing_estimator.py       ← regions Ω_D: forward pass + pattern hashing
 │   ├── estimators.py              ← plug-in, MM, Grassberger, Chao–Shen, CWJ, ANSB
-│   ├── results.py                 ← loads results/{routing,baselines}_<sweep>.csv by protocol
+│   ├── results.py                 ← loads results/{routing,baselines}_<sweep>.csv.gz by protocol
 │   ├── functional_quotient.py     ← ε-functional quotient + per-network estimates (step 2)
 │   ├── probe_loader.py            ← in-sample / probe sets per dataset
 │   ├── paths.py                   ← figure output path (→ figures/)

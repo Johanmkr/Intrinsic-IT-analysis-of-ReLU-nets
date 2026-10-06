@@ -9,10 +9,10 @@ Composite and WBC use 5-hidden-layer architectures (layers 1-5).
 MNIST uses 3-hidden-layer FC networks on PCA-10 inputs (layers 1-3).
 
 Inputs:
-    results/baselines_<sweep>.csv
-    results/routing_composite_label_noise.csv
-    results/routing_wbc_label_noise.csv
-    results/routing_mnist_capacity.csv
+    results/baselines_<sweep>.csv.gz
+    results/routing_composite_label_noise.csv.gz
+    results/routing_wbc_label_noise.csv.gz
+    results/routing_mnist_capacity.csv.gz
 
 Outputs:
     figures/layer_profile_last_epoch.png / .pdf

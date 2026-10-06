@@ -15,7 +15,7 @@ number of occupied cells). KSG gives ``ksg<k>_bits`` (clipped at 0, as in the
 paper) and ``ksg<k>_signed_bits``.
 
 One CSV per (network, protocol) next to the HDF5 (``baselines_seed_<s>_<protocol>.csv``),
-aggregated by ``--aggregate`` into ``results/baselines_<sweep>.csv``.
+aggregated by ``--aggregate`` into ``results/baselines_<sweep>.csv.gz``.
 
 Usage:
     python run_baselines.py [--sweeps ...] [--workers N] [--all-epochs] [--force]
@@ -40,6 +40,7 @@ from run_estimate import RESULTS, _git, _insample, _probe, _tag, discover_jobs
 from src_experiment.baselines.activations import load_layer_activations
 from src_experiment.baselines.mi_baselines import ksg_mi, quantize_per_layer
 from src_experiment.estimators import all_mutual_information_bits, contingency_table
+from src_experiment.results import SUFFIX, write_table
 from src_experiment.routing_estimator import RoutingEstimator
 
 SWEEPS = ("composite_label_noise", "wbc_label_noise", "mnist_capacity")
@@ -139,8 +140,8 @@ def aggregate(sweeps: List[str]) -> None:
         if not frames:
             continue
         df = pd.concat(frames, ignore_index=True)
-        out = RESULTS / f"baselines_{sweep}.csv"
-        df.to_csv(out, index=False)
+        out = RESULTS / f"baselines_{sweep}{SUFFIX}"
+        write_table(df, out)
         summary[sweep] = {"rows": len(df), "protocols": sorted(df["protocol"].unique()),
                           "epochs": sorted(int(e) for e in df["epoch"].unique()),
                           "missing_jobs": len(missing)}
