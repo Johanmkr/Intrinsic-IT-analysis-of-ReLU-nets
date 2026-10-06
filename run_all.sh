@@ -14,7 +14,6 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 ARGS=("$@")
-chmod +x step1_train.sh step2_estimate.sh step3_baselines.sh step4_diagnostics.sh step5_plot.sh
 
 echo "=== run_all.sh — $(date) ==="
 echo "args: ${ARGS[*]:-<none>}"

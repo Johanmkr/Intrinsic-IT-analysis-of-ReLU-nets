@@ -1,8 +1,8 @@
 {
   "step2_estimate": {
-    "created": "2026-10-05T12:12:11+00:00",
-    "git_commit": "e4f22a887b17ded6590afaf411e6b29d08b02dcb",
-    "git_dirty": true,
+    "created": "2026-10-06T12:11:31+00:00",
+    "git_commit": "c2417a82f1da86e8bbf45ccef3436cc921507b58",
+    "git_dirty": false,
     "smoke": false,
     "jobs_per_network": {
       "composite_label_noise": [
@@ -23,7 +23,7 @@
         "train/train_labels"
       ]
     },
-    "python": "3.13.1",
+    "python": "3.13.15",
     "numpy": "2.4.4",
     "pandas": "3.0.2",
     "sweeps": {
@@ -134,9 +134,9 @@
     }
   },
   "step3_baselines": {
-    "created": "2026-10-05T12:52:50+00:00",
-    "git_commit": "a4516671da17ddbf3bd758de3ac539f4fa3c1033",
-    "git_dirty": true,
+    "created": "2026-10-06T12:19:44+00:00",
+    "git_commit": "c2417a82f1da86e8bbf45ccef3436cc921507b58",
+    "git_dirty": false,
     "binning_bins": [
       2,
       4,
@@ -190,9 +190,9 @@
     }
   },
   "step4_diagnostics": {
-    "created": "2026-10-05T13:17:55+00:00",
-    "git_commit": "62cb71dc86ef109862a2d8fa5837e7e95c489756",
-    "git_dirty": true,
+    "created": "2026-10-06T12:25:49+00:00",
+    "git_commit": "c2417a82f1da86e8bbf45ccef3436cc921507b58",
+    "git_dirty": false,
     "ordering_epsilons": [
       0.1,
       0.3,
@@ -218,7 +218,7 @@
         "missing_jobs": 0
       },
       "region_sizes_mnist_capacity": {
-        "rows": 19611,
+        "rows": 19534,
         "missing_jobs": 0
       },
       "ordering_mnist_capacity": {
