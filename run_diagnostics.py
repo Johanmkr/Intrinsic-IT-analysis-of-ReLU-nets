@@ -33,7 +33,7 @@ from typing import List, Optional
 import numpy as np
 import pandas as pd
 
-from run_estimate import RESULTS, SWEEP_PROTOCOLS, _git, _insample, _probe, _tag, discover_jobs
+from run_estimate import RESULTS, SWEEP_PROTOCOLS, _git, _git_dirty, _insample, _probe, _tag, discover_jobs
 from src_experiment.estimators import all_mutual_information_bits, contingency_table
 from src_experiment.functional_quotient import (
     _build_active_data,
@@ -158,7 +158,7 @@ def aggregate(sweeps: List[str]) -> None:
     prov["step4_diagnostics"] = {
         "created": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "git_commit": _git("rev-parse", "HEAD"),
-        "git_dirty": bool(_git("status", "--porcelain")),
+        "git_dirty": _git_dirty(),
         "ordering_epsilons": list(ORDER_EPSILONS), "random_orders": N_ORDERS,
         "files": summary,
     }

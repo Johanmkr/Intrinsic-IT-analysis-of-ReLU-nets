@@ -153,6 +153,11 @@ def _git(*args: str) -> str:
         return "unknown"
 
 
+def _git_dirty() -> bool:
+    """Uncommitted changes outside results/, which the steps themselves rewrite."""
+    return bool(_git("status", "--porcelain", "--", ".", ":!results"))
+
+
 def aggregate(sweeps: List[str]) -> None:
     RESULTS.mkdir(exist_ok=True)
     summary = {}
@@ -186,7 +191,7 @@ def aggregate(sweeps: List[str]) -> None:
     provenance = {
         "created": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "git_commit": _git("rev-parse", "HEAD"),
-        "git_dirty": bool(_git("status", "--porcelain")),
+        "git_dirty": _git_dirty(),
         "smoke": smoke.SMOKE,
         "jobs_per_network": {s: [f"{p}/{l}" for p, l in SWEEP_PROTOCOLS[s]] for s in sweeps},
         "python": platform.python_version(),

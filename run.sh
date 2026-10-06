@@ -2,7 +2,7 @@
 # Entry point for reproducing the paper. See README.md.
 #
 # Usage:
-#   ./run.sh setup              # uv sync + download MNIST into data/
+#   ./run.sh setup              # uv sync + download MNIST and WBC into data/
 #   ./run.sh test [--full]      # unit tests on the smoke checkpoints (--full: on outputs/)
 #   ./run.sh smoke              # whole pipeline on a tiny sweep, in smoke/ (minutes)
 #   ./run.sh all [--force]      # steps 1-5 (hours; dominated by training)
@@ -27,7 +27,9 @@ case "$cmd" in
     uv run python -c "from torchvision import datasets
 for train in (True, False):
     datasets.MNIST(root='./data', train=train, download=True)
-print('MNIST ready in data/')"
+from src_experiment.dataset import _uci_tables
+_uci_tables(17)  # WBC
+print('MNIST and WBC ready in data/')"
     ;;
   test)
     # Default: the checkpoints of ./run.sh smoke (minutes). --full: the step-1 outputs/.

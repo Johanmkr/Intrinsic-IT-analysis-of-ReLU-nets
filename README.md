@@ -10,8 +10,11 @@ Everything runs from this directory with one command per step.
 ## Requirements
 
 - Python ≥ 3.12 with [uv](https://github.com/astral-sh/uv) installed. No GPU and no Julia.
-- Internet access on the **first run** only: WBC is fetched from the UCI repository and
-  MNIST is downloaded via torchvision (`./run.sh setup` does the download up front).
+- Internet access on the **first run** only: WBC is fetched from the UCI repository
+  (cached as CSV in `data/uci_17/`) and MNIST is downloaded via torchvision
+  (`./run.sh setup` does both up front).
+- Or only Docker: the image (see [Docker](#c-docker)) contains the environment,
+  both datasets and the stored results, and runs without internet.
 - All estimators are implemented in this repository. `infomeasure` (AGPL-3.0, used for
   the rebuttal) is only needed to run the cross-check in `tests/test_estimators.py`:
   `uv sync --group rebuttal`; without it that comparison is skipped.
@@ -53,6 +56,39 @@ dominated by training. Every step skips work whose output already exists, so if
 everything (or move `outputs/` aside first). Since the gzipped tables are
 written deterministically, `git status results/` afterwards lists only the
 tables whose contents changed (plus `provenance.json`, which records the run).
+
+### C. Docker
+
+The `Dockerfile` builds an image with the locked environment, MNIST, WBC and
+the stored results; its entry point is `./run.sh`, so it takes the same
+commands. Run it from a clone of this repository, mounting the folders the
+pipeline writes to (`--user` makes the files yours, not root's):
+
+```bash
+docker build -t intrinsic-it-relu-nets .
+
+# A: figures from the stored results → ./figures
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/figures:/app/figures" \
+    intrinsic-it-relu-nets step5
+
+# B: rerun every experiment → ./outputs, ./results, ./figures, ./logs
+mkdir -p outputs results figures logs
+docker run --rm --user "$(id -u):$(id -g)" \
+    -v "$PWD/outputs:/app/outputs" -v "$PWD/results:/app/results" \
+    -v "$PWD/figures:/app/figures" -v "$PWD/logs:/app/logs" \
+    intrinsic-it-relu-nets all --workers 8
+git status results/    # which result tables differ from the stored ones
+```
+
+To check the code in the image, run the smoke pipeline and the tests in one
+container (the tests read the smoke checkpoints):
+`docker run --rm --entrypoint sh intrinsic-it-relu-nets -c "./run.sh smoke && ./run.sh test"`.
+Set `--workers` to the number of cores you give the container: inside a
+container the CPU count often reports the whole host. The image installs the
+PyPI build of PyTorch, which includes CUDA libraries the code does not use
+(a few GB); everything runs on the CPU.
+
+### Notes
 
 `./run.sh step1` … `./run.sh step5` run single steps; `all` and steps 1–4 accept
 `--force` to recompute and `--workers N` to limit parallelism (default:
@@ -240,6 +276,7 @@ results of steps 2–4 are stored in `results/` but not yet drawn as figures or 
 intrinsic_IT_analysis_of_relu_nets/
 ├── README.md                      ← this file
 ├── run.sh                         ← entry point (setup/test/smoke/all/stepN)
+├── Dockerfile                     ← reproduction image (entry point ./run.sh)
 ├── run_all.sh                     ← steps 1–5 end-to-end
 ├── step1_train.sh                 ← train 230 models
 ├── step2_estimate.sh              ← compute routing MI

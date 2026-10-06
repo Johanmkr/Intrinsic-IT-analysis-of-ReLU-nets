@@ -18,8 +18,10 @@ from src_experiment.utils import savefig  # noqa: E402
 
 
 def plot_composite_dataset():
-    train_loader, _ = get_new_data(dataset_name="composite", split_seed=42, batch_size=10000)
-    X_train, y_train = next(iter(train_loader))
+    train_loader, _ = get_new_data(dataset_name="composite", split_seed=42)
+    # The stored tensors, not a batch from the shuffling loader, so the points
+    # are drawn in the same order (and overlap the same way) on every run.
+    X_train, y_train = train_loader.dataset.tensors
     X, y = X_train.numpy(), y_train.numpy()
 
     fig, ax = plt.subplots(figsize=(8, 8))

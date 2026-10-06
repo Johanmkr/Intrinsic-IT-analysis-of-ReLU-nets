@@ -1,3 +1,7 @@
+import os
+from pathlib import Path
+
+import pandas as pd
 import torch
 import numpy as np
 from torch.utils.data import TensorDataset, DataLoader
@@ -12,6 +16,9 @@ from src_experiment.smoke import SMOKE
 
 N_SAMPLES = 10000
 DEFAULT_BATCH_SIZE = 32
+
+# Downloaded datasets (MNIST via torchvision, UCI tables cached by _load_uci).
+DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 
 # ------------------------------------------------------------------------------
 #       1. Optimized Utility Functions
@@ -86,12 +93,31 @@ def process_and_split(X: np.ndarray, y: np.ndarray, noise_level: float, test_siz
 #       2. Dataset Loaders (Lazy Loading)
 # ------------------------------------------------------------------------------
 
-def _load_uci(id: int, target_col: str = None, target_val: str = None, map_func: Callable = None):
-    """Generic helper to load UCI datasets only when requested."""
+def _uci_tables(id: int) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Features and targets of a UCI dataset, cached as CSV in data/uci_<id>/.
+
+    The first call fetches from the UCI repository and writes the cache
+    (atomically, so parallel workers never read a partial file); later calls,
+    including inside the Docker image, need no internet.
+    """
+    cache = DATA_DIR / f"uci_{id}"
+    paths = {name: cache / f"{name}.csv" for name in ("features", "targets")}
+    if all(p.exists() for p in paths.values()):
+        return pd.read_csv(paths["features"]), pd.read_csv(paths["targets"])
     print(f"Fetching UCI dataset ID={id}...")
     dataset = fetch_ucirepo(id=id)
-    X = dataset.data.features
-    y = dataset.data.targets
+    tables = {"features": dataset.data.features, "targets": dataset.data.targets}
+    cache.mkdir(parents=True, exist_ok=True)
+    for name, df in tables.items():
+        tmp = paths[name].with_name(f"{paths[name].name}.{os.getpid()}.tmp")
+        df.to_csv(tmp, index=False)
+        tmp.replace(paths[name])
+    return tables["features"], tables["targets"]
+
+
+def _load_uci(id: int, target_col: str = None, target_val: str = None, map_func: Callable = None):
+    """Generic helper to load UCI datasets only when requested."""
+    X, y = _uci_tables(id)
     
     if target_col:
         y = y[target_col]

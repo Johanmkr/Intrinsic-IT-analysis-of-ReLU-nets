@@ -36,7 +36,7 @@ from typing import List, Optional
 import numpy as np
 import pandas as pd
 
-from run_estimate import RESULTS, _git, _insample, _probe, _tag, discover_jobs
+from run_estimate import RESULTS, _git, _git_dirty, _insample, _probe, _tag, discover_jobs
 from src_experiment.baselines.activations import load_layer_activations
 from src_experiment.baselines.mi_baselines import ksg_mi, quantize_per_layer
 from src_experiment.estimators import all_mutual_information_bits, contingency_table
@@ -151,7 +151,7 @@ def aggregate(sweeps: List[str]) -> None:
     prov["step3_baselines"] = {
         "created": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "git_commit": _git("rev-parse", "HEAD"),
-        "git_dirty": bool(_git("status", "--porcelain")),
+        "git_dirty": _git_dirty(),
         "binning_bins": list(BINNING_BINS), "kmeans_fixed_K": list(KMEANS_FIXED_K),
         "ksg_k": list(KSG_KS), "sweeps": summary,
     }
