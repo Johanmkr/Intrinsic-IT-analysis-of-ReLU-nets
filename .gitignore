@@ -24,6 +24,7 @@ configs/mnist_capacity/
 # Data files (never commit HDF5 or plain CSVs)
 *.h5
 *.csv
+!results/summary/*.csv
 data/
 # OS / editor noise
 .DS_Store

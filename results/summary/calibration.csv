@@ -1,0 +1,4 @@
+baseline,n,pearson_r,n_composite,n_mnist_fc,n_wbc
+binning8_miller_madow_bits,75,0.911499,30,15,30
+kmeansKY_miller_madow_bits,75,0.921615,30,15,30
+ksg3_bits,75,0.89155,30,15,30

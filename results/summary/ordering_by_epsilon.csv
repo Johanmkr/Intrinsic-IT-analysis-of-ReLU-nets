@@ -1,0 +1,9 @@
+epsilon,scope,n_cells,regions_min,regions_max,spread_median,spread_p95,spread_max,regions_at_spread_max,relative_spread_max,plug_in_func_spread_max,miller_madow_func_spread_max
+0.1,all layers,690,6,9997,0,9,17,4713,0.0666667,0.0526316,0.0526316
+0.3,all layers,690,6,9997,2,38.55,84,6665,0.0943396,0.146448,0.148365
+0.5,all layers,690,6,9997,4,43,83,7946,0.1875,0.348332,0.348332
+1,all layers,690,6,9997,1,19,47,9440,0.142857,0.482941,0.474284
+0.1,deepest layer,210,14,9997,0,11.55,17,4713,0.0625,0.0526316,0.0526316
+0.3,deepest layer,210,14,9997,11,45.55,60,5014,0.0652174,0.104415,0.0996349
+0.5,deepest layer,210,14,9997,14,53.1,83,7946,0.0825688,0.348332,0.348332
+1,deepest layer,210,14,9997,5,28,47,9440,0.105263,0.482941,0.474284

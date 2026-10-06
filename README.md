@@ -123,7 +123,7 @@ step3_baselines.sh      → results/baselines_<sweep>.csv.gz  (binning / k-means
         ↓
 step4_diagnostics.sh    → results/region_sizes_<sweep>.csv.gz, results/ordering_<sweep>.csv.gz
         ↓
-step5_plot.sh           → figures/*.pdf + figures/*.png
+step5_plot.sh           → figures/*.pdf + figures/*.png, results/summary/ (tables + numbers)
 
 results/provenance.json — git commit, settings and row counts of steps 2–4
 ```
@@ -273,9 +273,25 @@ only `results/`, so it needs neither the trained networks nor the datasets.
 | `composite_dataset` | `scripts/plot_composite_dataset.py` | App. B: the Composite training split after scaling, coloured by class |
 | `training_curves_{composite,wbc,mnist}` | `scripts/plot_training_curves.py` | App. F: test accuracy and loss over epochs (mean ± std over seeds) |
 
-The figures use the `heldout` protocol with `true_labels`. The bias-correction,
-label-permutation, held-out-vs-in-sample, baseline-grid, region-size and ordering
-results of steps 2–4 are stored in `results/` but not yet drawn as figures or tables.
+The figures use the `heldout` protocol with `true_labels`.
+
+Step 5 also runs `scripts/summarize_results.py`, which writes the appendix
+tables and every number quoted in the text to `results/summary/` (tracked in
+git):
+
+| File | Content |
+|---|---|
+| `calibration.csv` | Fig. 2: n and Pearson r per baseline |
+| `bias_corrections_by_cell.csv`, `bias_corrections_by_rho.csv` | Miller–Madow, Grassberger, Chao–Shen, Chao–Wang–Jost and ANSB: mean, seed-std and correction per (dataset, architecture, PCA dim, layer), and averaged over ρ ranges |
+| `heldout_vs_insample.csv` | held-out vs in-sample routing MI and ρ (Composite, WBC) |
+| `baseline_sensitivity.csv` | Pearson r of the routing MI against every binning / k-means / KSG setting of step 3 |
+| `occupancy.csv` | ρ and singleton fractions per configuration (deepest layer) |
+| `label_permutation.csv` | clean vs label-permuted networks: raw and quotient MI (ε = 0.3), ρ, accuracy |
+| `ordering_by_cell.csv`, `ordering_by_epsilon.csv` | spread of the functional quotient over 16 visiting orders |
+| `numbers.json`, `SUMMARY.md` | every number quoted in the text, under a stable key, with the selection behind it |
+
+Unless a file says otherwise these use the clean networks, the last epoch, the
+held-out points with true labels and the mean over seeds.
 
 ---
 
@@ -312,7 +328,8 @@ intrinsic_IT_analysis_of_relu_nets/
 │   ├── plot_mnist_functional_pca_sweep.py
 │   ├── plot_rho_func_layerwise.py
 │   ├── plot_composite_dataset.py
-│   └── plot_training_curves.py
+│   ├── plot_training_curves.py
+│   └── summarize_results.py       ← appendix tables + quoted numbers → results/summary/
 │
 ├── src_experiment/                ← Python package (estimators + training)
 │   ├── dataset.py                 ← data loading (composite, WBC, MNIST)

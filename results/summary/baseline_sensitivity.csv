@@ -1,0 +1,76 @@
+group,family,setting,estimator,submitted,n,pearson_r
+composite+wbc,binning,binning2,miller_madow,False,60,0.945634
+mnist,binning,binning2,miller_madow,False,15,0.875316
+all,binning,binning2,miller_madow,False,75,0.89436
+composite+wbc,binning,binning2,plug_in,False,60,0.922684
+mnist,binning,binning2,plug_in,False,15,0.876768
+all,binning,binning2,plug_in,False,75,0.863282
+composite+wbc,binning,binning4,miller_madow,False,60,0.973381
+mnist,binning,binning4,miller_madow,False,15,0.727646
+all,binning,binning4,miller_madow,False,75,0.941284
+composite+wbc,binning,binning4,plug_in,False,60,0.965665
+mnist,binning,binning4,plug_in,False,15,0.758232
+all,binning,binning4,plug_in,False,75,0.927385
+composite+wbc,binning,binning8,miller_madow,True,60,0.945153
+mnist,binning,binning8,miller_madow,True,15,0.689643
+all,binning,binning8,miller_madow,True,75,0.911499
+composite+wbc,binning,binning8,plug_in,True,60,0.981004
+mnist,binning,binning8,plug_in,True,15,0.806737
+all,binning,binning8,plug_in,True,75,0.956035
+composite+wbc,binning,binning16,miller_madow,False,60,0.85216
+mnist,binning,binning16,miller_madow,False,15,-0.569827
+all,binning,binning16,miller_madow,False,75,0.699345
+composite+wbc,binning,binning16,plug_in,False,60,0.982035
+mnist,binning,binning16,plug_in,False,15,0.834524
+all,binning,binning16,plug_in,False,75,0.926018
+composite+wbc,binning,binning30,miller_madow,False,60,0.655339
+mnist,binning,binning30,miller_madow,False,15,-0.887549
+all,binning,binning30,miller_madow,False,75,0.205935
+composite+wbc,binning,binning30,plug_in,False,60,0.975153
+mnist,binning,binning30,plug_in,False,15,0.824313
+all,binning,binning30,plug_in,False,75,0.889593
+composite+wbc,kmeans,kmeansKY,miller_madow,True,60,0.970289
+mnist,kmeans,kmeansKY,miller_madow,True,15,0.719963
+all,kmeans,kmeansKY,miller_madow,True,75,0.921615
+composite+wbc,kmeans,kmeansKY,plug_in,True,60,0.970419
+mnist,kmeans,kmeansKY,plug_in,True,15,0.719963
+all,kmeans,kmeansKY,plug_in,True,75,0.922324
+composite+wbc,kmeans,kmeans2KY,miller_madow,False,60,0.974288
+mnist,kmeans,kmeans2KY,miller_madow,False,15,0.865559
+all,kmeans,kmeans2KY,miller_madow,False,75,0.940182
+composite+wbc,kmeans,kmeans2KY,plug_in,False,60,0.974328
+mnist,kmeans,kmeans2KY,plug_in,False,15,0.865559
+all,kmeans,kmeans2KY,plug_in,False,75,0.940925
+composite+wbc,kmeans,kmeans4KY,miller_madow,False,60,0.973686
+mnist,kmeans,kmeans4KY,miller_madow,False,15,0.868089
+all,kmeans,kmeans4KY,miller_madow,False,75,0.93831
+composite+wbc,kmeans,kmeans4KY,plug_in,False,60,0.973669
+mnist,kmeans,kmeans4KY,plug_in,False,15,0.868089
+all,kmeans,kmeans4KY,plug_in,False,75,0.940098
+composite+wbc,kmeans,kmeans16,miller_madow,False,60,0.97607
+mnist,kmeans,kmeans16,miller_madow,False,15,0.83445
+all,kmeans,kmeans16,miller_madow,False,75,0.944157
+composite+wbc,kmeans,kmeans16,plug_in,False,60,0.975991
+mnist,kmeans,kmeans16,plug_in,False,15,0.83445
+all,kmeans,kmeans16,plug_in,False,75,0.946331
+composite+wbc,kmeans,kmeans64,miller_madow,False,60,0.971258
+mnist,kmeans,kmeans64,miller_madow,False,15,0.861016
+all,kmeans,kmeans64,miller_madow,False,75,0.923583
+composite+wbc,kmeans,kmeans64,plug_in,False,60,0.972084
+mnist,kmeans,kmeans64,plug_in,False,15,0.861016
+all,kmeans,kmeans64,plug_in,False,75,0.939445
+composite+wbc,kmeans,kmeans256,miller_madow,False,60,0.964053
+mnist,kmeans,kmeans256,miller_madow,False,15,0.8291
+all,kmeans,kmeans256,miller_madow,False,75,0.867305
+composite+wbc,kmeans,kmeans256,plug_in,False,60,0.970516
+mnist,kmeans,kmeans256,plug_in,False,15,0.8291
+all,kmeans,kmeans256,plug_in,False,75,0.924499
+composite+wbc,ksg,ksg3,ksg (clipped at 0),True,60,0.944262
+mnist,ksg,ksg3,ksg (clipped at 0),True,15,0.759307
+all,ksg,ksg3,ksg (clipped at 0),True,75,0.89155
+composite+wbc,ksg,ksg5,ksg (clipped at 0),False,60,0.947515
+mnist,ksg,ksg5,ksg (clipped at 0),False,15,0.761657
+all,ksg,ksg5,ksg (clipped at 0),False,75,0.8951
+composite+wbc,ksg,ksg10,ksg (clipped at 0),False,60,0.95333
+mnist,ksg,ksg10,ksg (clipped at 0),False,15,0.771504
+all,ksg,ksg10,ksg (clipped at 0),False,75,0.901212
