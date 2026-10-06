@@ -9,7 +9,9 @@ Everything runs from this directory with one command per step.
 
 ## Requirements
 
-- Python ≥ 3.12 with [uv](https://github.com/astral-sh/uv) installed. No GPU and no Julia.
+- [uv](https://docs.astral.sh/uv/) (`curl -LsSf https://astral.sh/uv/install.sh | sh`).
+  uv installs the pinned Python (3.13, `.python-version`) and the locked packages
+  (`uv.lock`) itself. No GPU and no Julia.
 - Internet access on the **first run** only: WBC is fetched from the UCI repository
   (cached as CSV in `data/uci_17/`) and MNIST is downloaded via torchvision
   (`./run.sh setup` does both up front).
@@ -23,8 +25,15 @@ Everything runs from this directory with one command per step.
 
 ## Quick start
 
-There are two ways to use this repository: redraw the figures from the stored
-results, or rerun every experiment from scratch.
+Get the code (all commands below run from the repository root):
+
+```bash
+git clone https://github.com/Johanmkr/Intrinsic_IT_analysis_of_ReLU_nets.git
+cd Intrinsic_IT_analysis_of_ReLU_nets
+```
+
+Then either redraw the figures from the stored results (A) or rerun every
+experiment from scratch (B), with uv on your machine or with Docker (C).
 
 ### A. Redraw the figures from the stored results (minutes)
 
@@ -44,7 +53,7 @@ first time and caches the weights in `.cache/`.
 ### B. Rerun every experiment from scratch (hours)
 
 ```bash
-./run.sh setup     # uv sync + download MNIST into data/
+./run.sh setup     # uv sync + download MNIST and WBC into data/
 ./run.sh smoke     # optional: whole pipeline on a tiny sweep in smoke/ (~5 min)
 ./run.sh all       # steps 1–5: train → estimate → baselines → diagnostics → figures
 ```
@@ -59,10 +68,11 @@ tables whose contents changed (plus `provenance.json`, which records the run).
 
 ### C. Docker
 
-The `Dockerfile` builds an image with the locked environment, MNIST, WBC and
-the stored results; its entry point is `./run.sh`, so it takes the same
-commands. Run it from a clone of this repository, mounting the folders the
-pipeline writes to (`--user` makes the files yours, not root's):
+Needs only Docker (and git for the clone). The `Dockerfile` builds an image
+with the locked environment, MNIST, WBC and the stored results; its entry point
+is `./run.sh`, so it takes the same commands. Run these from the root of the
+clone, which mounts the folders the pipeline writes to (`--user` makes the
+files yours, not root's):
 
 ```bash
 docker build -t intrinsic-it-relu-nets .
