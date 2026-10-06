@@ -12,8 +12,10 @@ dependencies = [
     "pyyaml>=6.0",
     "scikit-learn>=1.6",
     "scipy>=1.15",
-    "torch>=2.7",
-    "torchvision>=0.22",
+    "threadpoolctl>=3.6",
+    # Pinned: the networks were verified to retrain bit-identically with these.
+    "torch==2.11.0",
+    "torchvision==0.26.0",
     "tqdm>=4.67",
     "ucimlrepo>=0.0.7",
 ]
@@ -28,3 +30,14 @@ dev = [
 rebuttal = [
     "infomeasure==0.6.2",  # version used for the rebuttal numbers,
 ]
+
+# CPU-only PyTorch: nothing here uses a GPU, and the CPU build trains the
+# networks bit-identically to the CUDA build at ~1/4 of the install size.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+torchvision = { index = "pytorch-cpu" }

@@ -94,9 +94,8 @@ To check the code in the image, run the smoke pipeline and the tests in one
 container (the tests read the smoke checkpoints):
 `docker run --rm --entrypoint sh intrinsic-it-relu-nets -c "./run.sh smoke && ./run.sh test"`.
 Set `--workers` to the number of cores you give the container: inside a
-container the CPU count often reports the whole host. The image installs the
-PyPI build of PyTorch, which includes CUDA libraries the code does not use
-(a few GB); everything runs on the CPU.
+container the CPU count often reports the whole host. Everything runs on the
+CPU; the environment uses the CPU-only PyTorch build.
 
 ### Notes
 
@@ -357,7 +356,15 @@ intrinsic_IT_analysis_of_relu_nets/
 
 - **Determinism.** Global seed 42 controls all data splits and shuffles.
   Model seed (101–105) controls weight initialisation only. Both seeds are
-  set independently across PyTorch, NumPy, and Python random.
+  set independently across PyTorch, NumPy, and Python random. Each network
+  trains in a single thread, and the MNIST PCA runs with one BLAS thread
+  (`dataset._pca_project`): its rounding otherwise depends on the thread
+  count, i.e. on the machine. Retraining is then bit-identical on the same
+  kind of CPU; across CPU types (e.g. AVX2 vs AVX-512) the BLAS kernels can
+  differ in the last digits.
+- **Pinned environment.** `uv.lock` pins every package; PyTorch is the
+  CPU-only build of 2.11.0, which retrains the networks bit-identically to
+  the CUDA build. No GPU is used.
 
 - **Protocols are explicit.** Every result row records its `protocol`
   (`heldout`, `insample`, `train`) and `labels`, and the figure scripts select

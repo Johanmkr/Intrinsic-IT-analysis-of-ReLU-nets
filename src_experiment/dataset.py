@@ -9,6 +9,7 @@ from sklearn.datasets import make_moons, make_blobs, make_circles
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
+from threadpoolctl import threadpool_limits
 from ucimlrepo import fetch_ucirepo
 from typing import Tuple, Callable
 from torchvision import datasets
@@ -50,6 +51,21 @@ def permute_labels(y: np.ndarray, seed: int) -> np.ndarray:
     return np.random.default_rng(seed).permutation(y)
 
 
+def _pca_project(X_train: np.ndarray, X_test: np.ndarray, target_dim: int, seed: int):
+    """PCA fit on the train split, applied to both splits.
+
+    BLAS is limited to one thread: the rounding of the PCA depends on the
+    thread count, so this makes the projected inputs (and every network trained
+    on them) the same on every machine with the same CPU kernels, independent
+    of its core count or of OMP_NUM_THREADS.
+    """
+    if target_dim > X_train.shape[1]:
+        raise ValueError(f"target_dim ({target_dim}) cannot be larger than actual dataset dimension ({X_train.shape[1]}).")
+    with threadpool_limits(limits=1, user_api="blas"):
+        pca = PCA(n_components=target_dim, random_state=seed)
+        return pca.fit_transform(X_train), pca.transform(X_test)
+
+
 def process_and_split(X: np.ndarray, y: np.ndarray, noise_level: float, test_size=0.2, seed=42, target_dim: int = None, shuffle_labels: bool = False) -> Tuple[TensorDataset, TensorDataset]:
     """Unified pipeline for splitting, PCA scaling, and noise injection."""
     # 1. Encode labels
@@ -70,12 +86,7 @@ def process_and_split(X: np.ndarray, y: np.ndarray, noise_level: float, test_siz
 
     # 4. Dimensionality Reduction (PCA) - Fit ONLY on Train Data
     if target_dim is not None:
-        if target_dim > X_train.shape[1]:
-            raise ValueError(f"target_dim ({target_dim}) cannot be larger than actual dataset dimension ({X_train.shape[1]}).")
-        
-        pca = PCA(n_components=target_dim, random_state=seed)
-        X_train = pca.fit_transform(X_train)
-        X_test = pca.transform(X_test)
+        X_train, X_test = _pca_project(X_train, X_test, target_dim, seed)
 
     # 5. Scale to Unit Hypercube [-1, 1]
     scaler = MinMaxScaler(feature_range=(-1, 1))
@@ -206,11 +217,7 @@ def get_new_data(dataset_name: str, noise: float = 0.0, batch_size: int = DEFAUL
             y_train = inject_label_noise_vectorized(y_train, noise, 10, split_seed)
             
         if target_dim is not None:
-             if target_dim > X_train.shape[1]:
-                 raise ValueError(f"target_dim ({target_dim}) cannot be larger than actual dataset dimension ({X_train.shape[1]}).")
-             pca = PCA(n_components=target_dim, random_state=split_seed)
-             X_train = pca.fit_transform(X_train)
-             X_test = pca.transform(X_test)
+            X_train, X_test = _pca_project(X_train, X_test, target_dim, split_seed)
         
         # Scale back to bounded interval
         scaler = MinMaxScaler(feature_range=(-1, 1))
