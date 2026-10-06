@@ -68,6 +68,10 @@ BASELINES = [
     ("ksg3_bits",                  r"KSG $k{=}3$"),
 ]
 
+# Axis range [bits]: covers every value (Composite routing MI reaches ~2.63,
+# MNIST KSG ~2.84); points outside it would be silently dropped from view.
+AXIS_MAX = 3.0
+
 OURS_COL   = "plug_in_bits"
 OURS_LABEL = r"$\hat{I}$: Ours [bits]"
 OUT_STEM   = "calibration_scatter_raw"
@@ -149,19 +153,22 @@ def plot(df: pd.DataFrame) -> None:
             continue
         x = sub[OURS_COL].to_numpy()
         y = sub[bl_col].to_numpy()
+        outside = int(((x < 0) | (x > AXIS_MAX) | (y < 0) | (y > AXIS_MAX)).sum())
+        if outside:
+            print(f"[warn] {bl_col}: {outside} of {len(x)} points outside [0, {AXIS_MAX}] bits")
         for ds, sub_ds in sub.groupby("dataset"):
             ax.scatter(sub_ds[bl_col], sub_ds[OURS_COL],
                        s=22, alpha=0.7,
                        color=DATASET_COLOUR.get(ds, "tab:gray"),
                        label=DATASET_LABEL.get(ds, ds),
                        edgecolors="white", linewidths=0.4)
-        ax.plot([0.0, 2.5], [0.0, 2.5], "k--", lw=0.8, alpha=0.5)
+        ax.plot([0.0, AXIS_MAX], [0.0, AXIS_MAX], "k--", lw=0.8, alpha=0.5)
         r = float(np.corrcoef(x, y)[0, 1])
         ax.text(0.04, 0.96, rf"$r = {r:.3f}$  ($n={len(x)}$)",
                 transform=ax.transAxes, ha="left", va="top", fontsize=12,
                 bbox=dict(boxstyle="round,pad=0.25", fc="white", ec="none", alpha=0.85))
-        ax.set_xlim(0.0, 2.5)
-        ax.set_ylim(0.0, 2.5)
+        ax.set_xlim(0.0, AXIS_MAX)
+        ax.set_ylim(0.0, AXIS_MAX)
         ax.set_aspect("equal")
         ax.set_xlabel(r"$\hat{I}$: " + bl_label + " [bits]", fontsize=14)
         ax.set_ylabel(OURS_LABEL if ax is axes[0] else "", fontsize=14)
