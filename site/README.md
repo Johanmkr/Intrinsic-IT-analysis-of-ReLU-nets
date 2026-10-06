@@ -52,17 +52,19 @@ networks in `outputs/` (step 1) and `results/`:
 
 ## Code
 
-- `index.html`, `style.css` — the page.
-- `js/relu.js` — forward pass, activation patterns, region ids, active
-  subnetwork; `js/mi.js` — plug-in and Miller–Madow MI; `js/quotient.js` —
-  ε-clustering in first-encounter order (a port of
-  `src_experiment/functional_quotient.py`).
-- `js/demo-*.js` — one module per demo.
-- `tests/` — Node tests (`node --test site/tests`) that run the JS estimators on
-  the exported networks and compare them with `reference.json`. JavaScript
-  computes in float64 while the pipeline uses float32, so a point exactly on a
-  region boundary can land on the other side; the tests allow for that (region
-  counts within a few, MI within a small tolerance) and report the differences.
+- `index.html`, `style.css` — the page (light/dark via `prefers-color-scheme`, one column below 720 px).
+- `js/relu.js` — forward pass (pre-activations rounded to float32), activation
+  patterns, region ids in first-encounter order, active subnetwork.
+- `js/mi.js` — plug-in and Miller–Madow MI; `js/quotient.js` — ε-clustering in
+  first-encounter order (a port of `src_experiment/functional_quotient.py`).
+- `js/view.js` — a network evaluated on the pixel grid and on the data points.
+- `js/plot.js` — canvas partition maps and charts; `js/ui.js` — small UI helpers.
+- `js/demo-*.js` — one module per demo; `js/main.js` loads the data and starts
+  each demo when it scrolls into view.
+- `tests/` — Node tests (`cd site && npm test`) that run the JS estimators on
+  the exported networks and compare them with `reference.json`: region counts,
+  quotient sizes and accuracies are identical, and the MI agrees to rounding
+  error. CI runs them on every push.
 
 ## Local preview
 

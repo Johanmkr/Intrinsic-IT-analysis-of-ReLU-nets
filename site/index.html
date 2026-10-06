@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Intrinsic Information-Theoretic Analysis of ReLU Nets</title>
+  <meta name="description" content="Project page for the NeurIPS 2026 paper: routing information of ReLU networks from their own linear-region partition, with interactive demos.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1 15 L8 1 L15 15 Z M8 1 L8 15 M1 15 L15 8' fill='%231f5fa8' stroke='%23fff' stroke-width='0.8'/%3E%3C/svg%3E">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+<header class="hero">
+  <p class="venue">NeurIPS 2026</p>
+  <h1>Intrinsic Information-Theoretic Analysis of ReLU Nets</h1>
+  <p class="authors">
+    <span>Johan Mylius-Kroken<sup>1</sup></span>
+    <span>Elisabeth Wetzer<sup>1</sup></span>
+    <span>Ali Ramezani-Kebrya<sup>2</sup></span>
+    <span>Robert Jenssen<sup>1</sup></span>
+    <span>Kristoffer Wickstrøm<sup>1</sup></span>
+  </p>
+  <p class="affiliations"><sup>1</sup>UiT The Arctic University of Norway &nbsp; <sup>2</sup>University of Oslo</p>
+  <nav class="links" aria-label="Paper links">
+    <!-- web-content: fill in the paper PDF and arXiv links -->
+    <a class="button disabled" aria-disabled="true">Paper (PDF)</a>
+    <a class="button disabled" aria-disabled="true">arXiv</a>
+    <a class="button" href="https://openreview.net/forum?id=4dnKZPefBt">OpenReview</a>
+    <a class="button" href="https://github.com/Johanmkr/Intrinsic_IT_analysis_of_ReLU_nets">Code</a>
+  </nav>
+</header>
+
+<main>
+  <figure class="teaser">
+    <img src="assets/teaser.png" width="1800" height="568"
+         alt="(a) After layer 1, four hyperplanes cut the input square into convex regions; (b) after layer 2 the partition is refined; (c) a highlighted region is identified by its activation pattern in the network diagram.">
+    <figcaption>A ReLU network partitions its input space into linear regions. Every input gets a
+      discrete region label — its activation pattern — alongside its continuous representation.</figcaption>
+  </figure>
+
+  <section>
+    <h2>Abstract</h2>
+    <!-- web-content: replace with the camera-ready abstract -->
+    <p class="placeholder">The camera-ready abstract will appear here.</p>
+  </section>
+
+  <section class="demo" data-demo="regions" id="regions">
+    <h2>1. Linear regions and routing information</h2>
+    <p>A trained network on the 7-class Composite dataset. Each colour is a linear region that contains
+      held-out points; grey regions contain none. The routing information Î(Y; Ω<sub>D</sub>) is the plug-in
+      mutual information between region and label over the N = 2,000 held-out points. Watch it rise
+      with depth and during training, and how the number of regions grows.</p>
+    <div class="controls">
+      <label>Network <select name="net"><option value="c555">[5, 5, 5]</option><option value="c999" selected>[9, 9, 9]</option><option value="c252525">[25, 25, 25]</option></select></label>
+      <label>Layer <input type="range" name="layer" min="1" max="3" value="3"></label>
+      <label>Epoch <input type="range" name="epoch" id="d1-epoch" min="0" max="21" value="21"> <output for="d1-epoch">150</output></label>
+      <label class="check"><input type="checkbox" name="points" checked> points</label>
+    </div>
+    <div class="panels">
+      <canvas class="map" aria-label="Linear regions of the network over the input square"></canvas>
+      <div><dl></dl><canvas class="chart" aria-label="Routing information over training"></canvas></div>
+    </div>
+    <p class="status" role="status"></p>
+  </section>
+
+  <section class="demo" data-demo="quotient" id="quotient">
+    <h2>2. The functional quotient</h2>
+    <p>Deep networks create far more regions than the data can populate, and the plug-in estimate
+      saturates. Regions whose active linear maps Ã differ by at most ε in relative Frobenius distance
+      implement (nearly) the same function and are merged into one class, visiting regions in
+      first-encounter order. Colours are quotient classes; thin lines are the original region boundaries.
+      At the first layer nothing merges: distinct patterns are distinct maps.</p>
+    <div class="controls">
+      <label>Network <select name="net"><option value="c555">[5, 5, 5]</option><option value="c999" selected>[9, 9, 9]</option><option value="c252525">[25, 25, 25]</option></select></label>
+      <label>Layer <input type="range" name="layer" min="1" max="3" value="3"></label>
+      <label>ε <input type="range" name="eps" id="d2-eps" min="0" max="200" value="30"> <output for="d2-eps">0.30</output></label>
+    </div>
+    <div class="panels">
+      <canvas class="map" aria-label="Functional quotient classes over the input square"></canvas>
+      <div><dl></dl><canvas class="chart" aria-label="Compression ratio and quotient information versus epsilon"></canvas></div>
+    </div>
+    <p class="status" role="status"></p>
+  </section>
+
+  <section class="demo" data-demo="bias" id="bias">
+    <h2>3. Plug-in bias as ρ → 1</h2>
+    <p>The plug-in estimate is only trustworthy when regions hold many points, i.e. when
+      ρ = |Ω<sub>D</sub>| / N is small. Here routing is simulated with a known true MI: K equally likely
+      regions, each with a home class kept with probability equal to the signal strength. As N shrinks
+      relative to K, ρ → 1 and the plug-in estimate (solid) climbs to H(Y) whatever the truth, while
+      Miller–Madow (dashed) overshoots below zero. Dots are the paper's 138 network cells
+      (filled: plug-in, open: Miller–Madow), normalised by H(Y).</p>
+    <div class="controls">
+      <label>Regions K <input type="range" name="k" id="d3-k" min="0" max="1000" value="571"> <output for="d3-k"></output></label>
+      <label>Signal <input type="range" name="signal" id="d3-signal" min="0" max="100" value="70"> <output for="d3-signal"></output></label>
+      <label>Samples N <input type="range" name="n" id="d3-n" min="0" max="1000" value="500"> <output for="d3-n"></output></label>
+    </div>
+    <div class="panels wide">
+      <canvas class="chart large" aria-label="Estimate normalised by H(Y) versus rho"></canvas>
+      <dl></dl>
+    </div>
+    <p class="status" role="status"></p>
+  </section>
+
+  <section class="demo" data-demo="permutation" id="permutation">
+    <h2>4. Routing information without learning</h2>
+    <p>Left: a network trained on the true labels. Right: the same architecture trained on randomly
+      permuted labels — it learns nothing about the true classes (test accuracy near chance), yet
+      its partition still separates the held-out points, and the wide network keeps a routing
+      information close to H(Y). High routing information alone does not show learned structure;
+      read it together with ρ and accuracy.</p>
+    <div class="controls">
+      <label>Network <select name="arch"><option value="555">[5, 5, 5]</option><option value="252525" selected>[25, 25, 25]</option></select></label>
+      <label>Layer <input type="range" name="layer" min="1" max="3" value="3"></label>
+      <label class="check"><input type="checkbox" name="points" checked> points</label>
+    </div>
+    <div class="panels two">
+      <figure><figcaption>trained on true labels</figcaption><canvas class="map clean" aria-label="Regions of the network trained on true labels"></canvas><dl class="clean"></dl></figure>
+      <figure><figcaption>trained on permuted labels</figcaption><canvas class="map permuted" aria-label="Regions of the network trained on permuted labels"></canvas><dl class="permuted"></dl></figure>
+    </div>
+    <p class="status" role="status"></p>
+  </section>
+
+  <section>
+    <h2>BibTeX</h2>
+    <div class="bibtex">
+      <button class="copy" data-target="bibtex">Copy</button>
+<pre id="bibtex">@inproceedings{myliuskroken2026intrinsic,
+  title     = {Intrinsic Information Theoretic Analysis of {ReLU} Nets},
+  author    = {Mylius-Kroken, Johan and Wetzer, Elisabeth and Ramezani-Kebrya, Ali
+               and Jenssen, Robert and Wickstr{\o}m, Kristoffer},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2026}
+}</pre>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>The demos run in your browser on the paper's trained networks and reproduce the pipeline's
+    estimates exactly. Code, results and reproduction instructions:
+    <a href="https://github.com/Johanmkr/Intrinsic_IT_analysis_of_ReLU_nets">GitHub</a> · MIT licence.</p>
+</footer>
+</body>
+</html>

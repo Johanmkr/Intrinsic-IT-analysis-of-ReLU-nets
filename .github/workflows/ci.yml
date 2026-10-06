@@ -4,6 +4,7 @@
 #   figures     every push / PR   step 5 from the committed results; results/summary/ must not change
 #   smoke       main + manual     whole pipeline on the tiny smoke sweep, then the tests on it
 #   docker      main + manual     build the image, step 5 inside it without network
+#   site        every push / PR   the project page's JavaScript estimators reproduce the pipeline
 name: CI
 
 on:
@@ -44,6 +45,16 @@ jobs:
         with:
           name: figures
           path: figures/
+
+  site:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: node --test "site/tests/*.test.mjs"
 
   smoke:
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'

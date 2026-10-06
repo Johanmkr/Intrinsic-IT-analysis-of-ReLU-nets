@@ -335,7 +335,9 @@ GitHub Actions (`.github/workflows/ci.yml`) runs the fast tests (with the
 `infomeasure` cross-check) and step 5 on every push and pull request; step 5
 must reproduce `results/summary/` exactly. On `main` (and on manual dispatch)
 it also runs the smoke pipeline plus the tests on it, and builds the Docker
-image and runs step 5 inside it without network.
+image and runs step 5 inside it without network. The `site` job checks that the
+project page's JavaScript estimators reproduce the pipeline's region counts,
+quotient sizes and MI exactly on the exported networks.
 
 ---
 
@@ -344,7 +346,9 @@ image and runs step 5 inside it without network.
 ```
 intrinsic_IT_analysis_of_relu_nets/
 ├── README.md                      ← this file
-├── .github/workflows/ci.yml       ← GitHub Actions: tests, step 5, smoke, Docker
+├── .github/workflows/ci.yml       ← GitHub Actions: tests, step 5, smoke, Docker, site tests
+├── .github/workflows/pages.yml    ← publishes site/ to GitHub Pages
+├── site/                          ← project page with interactive demos (see site/README.md)
 ├── run.sh                         ← entry point (setup/test/smoke/all/stepN)
 ├── Dockerfile                     ← reproduction image (entry point ./run.sh)
 ├── run_all.sh                     ← steps 1–5 end-to-end
@@ -374,7 +378,8 @@ intrinsic_IT_analysis_of_relu_nets/
 │   ├── plot_rho_func_layerwise.py
 │   ├── plot_composite_dataset.py
 │   ├── plot_training_curves.py
-│   └── summarize_results.py       ← appendix tables + quoted numbers → results/summary/
+│   ├── summarize_results.py       ← appendix tables + quoted numbers → results/summary/
+│   └── export_site_data.py        ← demo data for the project page → site/data/
 │
 ├── src_experiment/                ← Python package (estimators + training)
 │   ├── dataset.py                 ← data loading (composite, WBC, MNIST)

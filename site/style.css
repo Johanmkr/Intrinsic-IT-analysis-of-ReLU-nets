@@ -1,0 +1,93 @@
+:root {
+  --bg: #fbfbfa;
+  --fg: #1d1f24;
+  --muted: #5f6470;
+  --grid: #e3e4e8;
+  --card: #ffffff;
+  --border: #dcdde2;
+  --accent: #1f5fa8;
+  --accent2: #c2561a;
+  --code: #f2f2f0;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15171b;
+    --fg: #e8e9ec;
+    --muted: #a3a8b3;
+    --grid: #2c2f36;
+    --card: #1c1f24;
+    --border: #30343c;
+    --accent: #6fa8ec;
+    --accent2: #f0965f;
+    --code: #1f2228;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+main, .hero, footer { max-width: 980px; margin: 0 auto; padding: 0 16px; }
+a { color: var(--accent); }
+h1 { font-size: clamp(1.6rem, 4.2vw, 2.5rem); line-height: 1.2; margin: 0.2em 0 0.4em; }
+h2 { font-size: 1.35rem; margin: 2.2em 0 0.5em; }
+
+.hero { text-align: center; padding-top: 3rem; }
+.venue { margin: 0; color: var(--accent); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.85rem; }
+.authors { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.25em 1.2em; margin: 0.4em 0 0; font-size: 1.05rem; }
+.affiliations { color: var(--muted); font-size: 0.9rem; margin: 0.3em 0 1.2em; }
+.links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; }
+.button {
+  display: inline-block; padding: 0.45em 1.1em; border-radius: 999px;
+  background: var(--fg); color: var(--bg); text-decoration: none; font-weight: 500; font-size: 0.95rem;
+}
+.button:hover { opacity: 0.85; }
+.button.disabled { background: var(--grid); color: var(--muted); cursor: default; }
+
+.teaser { margin: 2.5rem 0 0; }
+.teaser img { width: 100%; height: auto; border-radius: 8px; background: #fff; }
+figcaption { color: var(--muted); font-size: 0.92rem; margin-top: 0.5em; }
+.placeholder { color: var(--muted); font-style: italic; }
+
+.demo { border-top: 1px solid var(--border); }
+.controls {
+  display: flex; flex-wrap: wrap; gap: 0.6rem 1.4rem; align-items: center;
+  margin: 1rem 0; padding: 0.7rem 1rem; background: var(--card);
+  border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem;
+}
+.controls label { display: inline-flex; align-items: center; gap: 0.5em; }
+.controls output { min-width: 3.5ch; font-variant-numeric: tabular-nums; color: var(--muted); }
+input[type="range"] { width: 130px; accent-color: var(--accent); }
+select { font: inherit; padding: 0.15em 0.3em; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--fg); }
+
+.panels { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.4rem; align-items: start; }
+.panels.wide { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+.panels figure { margin: 0; }
+canvas { display: block; width: 100%; }
+canvas.map { aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--border); }
+canvas.chart { height: 230px; margin-top: 0.6rem; }
+canvas.chart.large { height: 360px; margin-top: 0; }
+
+dl { display: grid; grid-template-columns: auto 1fr; gap: 0.15em 1em; margin: 0; font-size: 0.95rem; }
+dt { color: var(--muted); }
+dd { margin: 0; font-variant-numeric: tabular-nums; text-align: right; }
+.status { color: var(--accent2); font-size: 0.9rem; min-height: 1em; }
+.demo:not(.ready) .panels { opacity: 0.4; }
+
+.bibtex { position: relative; }
+pre { background: var(--code); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; overflow-x: auto; font-size: 0.85rem; line-height: 1.45; }
+button.copy {
+  position: absolute; top: 0.5rem; right: 0.5rem; font: inherit; font-size: 0.8rem;
+  padding: 0.2em 0.8em; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--fg); cursor: pointer;
+}
+footer { color: var(--muted); font-size: 0.9rem; margin-top: 3rem; padding-bottom: 3rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+
+@media (max-width: 720px) {
+  body { font-size: 16px; }
+  .panels, .panels.wide { grid-template-columns: minmax(0, 1fr); }
+  input[type="range"] { width: 110px; }
+}
