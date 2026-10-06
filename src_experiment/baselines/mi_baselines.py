@@ -75,7 +75,7 @@ def ksg_mi(
         valid[mask] = True
 
     if not valid.any():
-        return {"bits": 0.0, "k": int(k), "n_used": 0,
+        return {"bits": 0.0, "bits_signed": 0.0, "k": int(k), "n_used": 0,
                 "wall": time.perf_counter() - t0}
 
     T_v = T[valid]

@@ -6,8 +6,9 @@ near 1 mean almost every activation pattern implements a distinct affine map;
 values near 0 mean the network reuses a small set of affine maps across many
 distinct routing paths.
 
-One panel per dataset; within each panel one line per architecture width,
-mean ± std across seeds.
+One panel per dataset; within each panel one line per ε, mean ± std across
+architectures and seeds. Panel titles give N, the number of evaluated points
+(held-out protocol), read from the results.
 
 Inputs:
     results/routing_composite_label_noise.csv
@@ -15,7 +16,7 @@ Inputs:
     results/routing_mnist_capacity.csv
 
 Outputs:
-    figures/rho_func_layerwise.png  (also written to neurips_figpath)
+    figures/rho_func_layerwise.png / .pdf
 """
 
 from __future__ import annotations
@@ -48,9 +49,9 @@ MNIST_TARGET_DIM = 10
 EPSILONS = [0.0, 0.1, 0.3, 0.5, 1.0, 2.0]
 
 DATASET_TITLE = {
-    "composite": "Composite (7 cls, $N$=10k)",
-    "wbc": "WBC (2 cls, $N$=569)",
-    "mnist": "MNIST (10 cls, PCA-10)",
+    "composite": "Composite (7 cls, $N$={N})",
+    "wbc": "WBC (2 cls, $N$={N})",
+    "mnist": "MNIST (10 cls, PCA-10, $N$={N})",
 }
 
 
@@ -60,7 +61,7 @@ def load_composite_wbc(dataset: str) -> pd.DataFrame:
         (df["noise_level"] == NOISE)
         & (df["epoch"] == LAST_EPOCH)
         & (df["arch_str"].isin(ARCHS_FIVE))
-    ][["arch_str", "layer", "epsilon", "rho_func", "seed"]].copy()
+    ][["arch_str", "layer", "epsilon", "rho_func", "seed", "N"]].copy()
 
 
 def load_mnist() -> pd.DataFrame:
@@ -69,7 +70,7 @@ def load_mnist() -> pd.DataFrame:
         (df["epoch"] == LAST_EPOCH)
         & (df["target_dim"] == MNIST_TARGET_DIM)
         & (df["arch_str"].isin(ARCHS_MNIST))
-    ][["arch_str", "layer", "epsilon", "rho_func", "seed"]].copy()
+    ][["arch_str", "layer", "epsilon", "rho_func", "seed", "N"]].copy()
 
 
 def _plot_panel(ax: plt.Axes, df: pd.DataFrame, title: str) -> None:
@@ -119,7 +120,8 @@ def main() -> None:
             print(f"[warn] no data for {ds}")
             ax.set_visible(False)
             continue
-        _plot_panel(ax, df, DATASET_TITLE[ds])
+        (n_points,) = df["N"].unique()  # one point set per dataset
+        _plot_panel(ax, df, DATASET_TITLE[ds].format(N=f"{n_points:,}"))
         if ax is not axes[0]:
             ax.set_ylabel("")
 

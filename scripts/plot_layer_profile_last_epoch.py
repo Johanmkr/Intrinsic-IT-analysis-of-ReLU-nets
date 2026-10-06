@@ -1,12 +1,12 @@
-"""Panel B — per-layer profile at the last epoch.
+"""Per-layer profile at the last epoch (Fig. [fig:layer-profile]).
 
-For each dataset we plot bits as a function of layer index for the four
-routing-estimator variants and the three cheap baselines (where available),
-averaged across seeds and architectures of the same depth.
+For each dataset we plot bits as a function of layer index for the plug-in
+routing MI and the three baselines (binning K=8 and k-means K=|Y| with
+Miller–Madow, KSG k=3), averaged across seeds and architectures of the same
+depth, on the held-out points.
 
 Composite and WBC use 5-hidden-layer architectures (layers 1-5).
-MNIST uses 3-hidden-layer FC networks on PCA-10 inputs (layers 1-3);
-baselines are not computed for this configuration.
+MNIST uses 3-hidden-layer FC networks on PCA-10 inputs (layers 1-3).
 
 Inputs:
     results/baselines_<sweep>.csv
@@ -15,7 +15,7 @@ Inputs:
     results/routing_mnist_capacity.csv
 
 Outputs:
-    figures/layer_profile_last_epoch.png  (also written to neurips_figpath)
+    figures/layer_profile_last_epoch.png / .pdf
 """
 
 from __future__ import annotations
@@ -233,7 +233,7 @@ def main() -> None:
         ours_summary[ds] = aggregate(ours, OURS)
         bs = baselines_for(ds)
         if bs.empty:
-            print(f"[warn] no baseline rows for {ds} — Phase 1a may not be done")
+            print(f"[warn] no baseline rows for {ds} — run step 3 (run_baselines.py)")
         baseline_summary[ds] = aggregate(bs, BASELINES) if not bs.empty else pd.DataFrame()
         H_Y[ds] = float(ours["H_Y_bits"].mean())
 

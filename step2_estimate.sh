@@ -9,7 +9,7 @@
 #
 # Output:
 #   outputs/<sweep>/<experiment>/routing_seed_<s>_<protocol>.csv   (per job)
-#   results/routing_{composite_label_noise,wbc_label_noise,mnist_capacity}.csv
+#   results/routing_{composite_label_noise,wbc_label_noise,mnist_capacity,label_permutation}.csv
 #   results/provenance.json                                         (git commit, settings)
 #
 # Already-computed jobs are skipped (resumable).

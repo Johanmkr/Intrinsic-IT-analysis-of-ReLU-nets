@@ -67,11 +67,9 @@ def make_config(arch: list, target_dim: int, seed: int) -> dict:
         "model_seed": seed,
         "epochs": EPOCHS,
         "batch_size": BATCH_SIZE,
-        "optimizer": "SGD",
         "learning_rate": LR,
         "momentum": MOMENTUM,
         "noise": 0.0,
-        "test_size": 0.2,
         "save_interval": SAVE_INTERVAL,
         "save_epochs": SAVE_EPOCHS,
     }
