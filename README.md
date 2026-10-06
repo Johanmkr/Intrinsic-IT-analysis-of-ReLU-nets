@@ -108,6 +108,27 @@ The smoke run uses one seed, 11 epochs and PCA dims {2, 10} (`src_experiment/smo
 and writes everything under `smoke/`, never touching `outputs/`, `results/` or `figures/`.
 Its figures only show that the code runs; they are not the paper's figures.
 
+### Run times
+
+Measured on a 22-core x86-64 workstation (AVX2) with `--workers 20`. Each network
+and each estimation job runs single-threaded, so wall time scales roughly with
+the number of workers; the CPU-hours column is wall time × workers.
+
+| Command | Wall time | ≈ CPU-hours |
+|---|---|---|
+| `./run.sh setup` (environment + MNIST/WBC download) | 1–2 min | — |
+| `./run.sh step5` (figures + `results/summary/` from `results/`) | 40 s | — |
+| `./run.sh smoke` | 5 min | — |
+| `./run.sh test` (on the smoke checkpoints) | 4–5 min | — |
+| `./run.sh step1` (train 230 networks) | 71 min | 24 |
+| `./run.sh step2` (routing MI, 350 jobs) | 39 min | 13 |
+| `./run.sh step3` (baselines, 270 jobs) | 8 min | 3 |
+| `./run.sh step4` (diagnostics, 350 jobs) | 6 min | 2 |
+| `./run.sh all` (steps 1–5) | **2 h 05 min** | ≈ 42 |
+
+Most of the training time is the 150 MNIST networks (about 3.5 min each on
+one core). The Docker image builds in about one minute (1.6 GB).
+
 ---
 
 ## Pipeline overview
@@ -295,11 +316,35 @@ held-out points with true labels and the mean over seeds.
 
 ---
 
+## Tests and CI
+
+```bash
+./run.sh test              # all tests; checkpoint tests on the smoke run (after ./run.sh smoke)
+./run.sh test --full       # all tests; checkpoint tests on outputs/ (after step 1)
+uv run pytest tests        # same as --full; in a fresh clone (no outputs/) only the fast tests run (~10 s)
+```
+
+The fast tests need no data or checkpoints: they build a tiny trained network
+(`tests/conftest.py`) and check the estimators, the functional quotient, the
+baselines, the step 2–4 jobs end to end (step 4's first-encounter order
+reproduces step 2), deterministic result files and the thread-independent MNIST
+PCA. The checkpoint tests cross-check the region code against `parx` and the
+step-2 rows against the routing estimator.
+
+GitHub Actions (`.github/workflows/ci.yml`) runs the fast tests (with the
+`infomeasure` cross-check) and step 5 on every push and pull request; step 5
+must reproduce `results/summary/` exactly. On `main` (and on manual dispatch)
+it also runs the smoke pipeline plus the tests on it, and builds the Docker
+image and runs step 5 inside it without network.
+
+---
+
 ## File structure
 
 ```
 intrinsic_IT_analysis_of_relu_nets/
 ├── README.md                      ← this file
+├── .github/workflows/ci.yml       ← GitHub Actions: tests, step 5, smoke, Docker
 ├── run.sh                         ← entry point (setup/test/smoke/all/stepN)
 ├── Dockerfile                     ← reproduction image (entry point ./run.sh)
 ├── run_all.sh                     ← steps 1–5 end-to-end
@@ -348,7 +393,11 @@ intrinsic_IT_analysis_of_relu_nets/
 │       └── mi_baselines.py        ← per-neuron binning, KSG
 │
 ├── tests/                         ← ./run.sh test (smoke checkpoints) / --full (outputs/)
+│   ├── conftest.py                ← tiny trained network in the step-1 HDF5 layout
 │   ├── test_estimators.py         ← estimators vs hand values, mpmath and infomeasure
+│   ├── test_quotient.py           ← active subnetwork, ε-clustering, first-encounter order
+│   ├── test_baselines.py          ← binning, KSG (vs scikit-learn), activations (vs PyTorch), grid
+│   ├── test_pipeline_jobs.py      ← steps 2–4 jobs end to end, result I/O, PCA determinism
 │   ├── test_routing_pipeline.py   ← step 2 consistency (regions, quotient, protocols)
 │   ├── test_label_permutation.py  ← step 2 rebuilds the permuted training labels
 │   └── test_parx_partitions.py    ← region code cross-checked against parx
