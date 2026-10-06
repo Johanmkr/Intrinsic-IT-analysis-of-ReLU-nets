@@ -17,11 +17,11 @@ concurrency:
 
 jobs:
   unit-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
         with:
           enable-cache: true
       # rebuttal group: infomeasure, for the estimator cross-check in tests/test_estimators.py
@@ -29,50 +29,50 @@ jobs:
       - run: uv run pytest tests -q -rs
 
   figures:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
         with:
           enable-cache: true
       - run: uv sync --frozen
       - run: ./run.sh step5
       - name: results/summary/ is reproduced from results/
         run: git diff --exit-code -- results/summary
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: figures
           path: figures/
 
   smoke:
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
         with:
           enable-cache: true
       - name: Cache MNIST and WBC
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: data
           key: datasets-v1
       - run: ./run.sh setup
       - run: ./run.sh smoke --workers 4
       - run: ./run.sh test -q -rs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: smoke-figures
           path: smoke/figures/
 
   docker:
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: docker build -t intrinsic-it-relu-nets .
       - name: step 5 inside the image, without network
         run: |
