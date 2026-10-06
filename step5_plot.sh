@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Step 5 — Generate the paper figures from the stored results.
 #
-# Reads:  results/*.csv.gz (steps 2–4), outputs/**/seed_*.h5 (training curves)
+# Reads:  results/*.csv.gz only (steps 1–4), so it runs without outputs/
 # Writes: figures/*.pdf and figures/*.png
 #
 # Figures produced:

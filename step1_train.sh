@@ -5,6 +5,8 @@
 # = 230 models, in parallel (one single-threaded process per network).
 # Each model is saved as outputs/<sweep>/<experiment_name>/seed_<seed>.h5;
 # per-network logs go to logs/train/. Already-trained models are skipped.
+# The per-epoch training curves of all networks are then exported to
+# results/training_curves.csv.gz (used for the App. F figures).
 #
 # Usage:
 #   ./step1_train.sh                # all sweeps
@@ -41,5 +43,9 @@ $PYTHON configs/generate_label_permutation.py | tail -1 | tee -a "$LOG"
 banner "Training"
 $PYTHON run_training.py "${ARGS[@]}" --sweeps \
     composite_label_noise wbc_label_noise mnist_capacity label_permutation 2>&1 | tee -a "$LOG"
+
+banner "Exporting training curves → results/training_curves.csv.gz"
+mkdir -p results
+$PYTHON run_training.py --export-curves 2>&1 | tee -a "$LOG"
 
 banner "Step 1 complete — log: $LOG"

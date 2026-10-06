@@ -20,16 +20,44 @@ Everything runs from this directory with one command per step.
 
 ## Quick start
 
+There are two ways to use this repository: redraw the figures from the stored
+results, or rerun every experiment from scratch.
+
+### A. Redraw the figures from the stored results (minutes)
+
+All results of steps 1–4 are in git under `results/` (gzipped CSVs), so the
+figures can be drawn without training anything or downloading MNIST:
+
 ```bash
-./run.sh setup     # uv sync + download MNIST into data/
-./run.sh smoke     # whole pipeline on a tiny sweep in smoke/ (~5 min) — checks the code runs
-./run.sh all       # full pipeline → results/ + figures/ (hours; dominated by training)
-./run.sh test      # unit tests on the smoke checkpoints (~4 min); --full: on outputs/
+uv sync            # install the environment
+./run.sh step5     # results/*.csv.gz → figures/*.pdf + figures/*.png
 ```
 
-`./run.sh step1` … `./run.sh step5` run single steps; `all` and the steps accept `--force`
-to recompute and `--workers N` to limit parallelism (default: #CPUs − 2). Wall time is
-dominated by training the 230 networks of step 1.
+Each figure script can also be run on its own, e.g.
+`uv run python scripts/plot_calibration_scatter.py` (the table under Step 5
+lists them). Figure 1 trains its tiny example network in a few seconds the
+first time and caches the weights in `.cache/`.
+
+### B. Rerun every experiment from scratch (hours)
+
+```bash
+./run.sh setup     # uv sync + download MNIST into data/
+./run.sh smoke     # optional: whole pipeline on a tiny sweep in smoke/ (~5 min)
+./run.sh all       # steps 1–5: train → estimate → baselines → diagnostics → figures
+```
+
+On a fresh clone `outputs/` is empty, so step 1 trains all 230 networks and
+steps 2–4 recompute every estimate and overwrite `results/`. Wall time is
+dominated by training. Every step skips work whose output already exists, so if
+`outputs/` holds an earlier run, use `./run.sh all --force` to recompute
+everything (or move `outputs/` aside first). Since the gzipped tables are
+written deterministically, `git status results/` afterwards lists only the
+tables whose contents changed (plus `provenance.json`, which records the run).
+
+`./run.sh step1` … `./run.sh step5` run single steps; `all` and steps 1–4 accept
+`--force` to recompute and `--workers N` to limit parallelism (default:
+#CPUs − 2). `./run.sh test` runs the unit tests on the smoke checkpoints
+(~4 min; `--full`: on `outputs/`).
 
 The smoke run uses one seed, 11 epochs and PCA dims {2, 10} (`src_experiment/smoke.py`)
 and writes everything under `smoke/`, never touching `outputs/`, `results/` or `figures/`.
@@ -42,7 +70,7 @@ Its figures only show that the code runs; they are not the paper's figures.
 ```
 configs/generate_*.py   → YAML configs
         ↓
-step1_train.sh          → outputs/<sweep>/<experiment>/seed_<seed>.h5
+step1_train.sh          → outputs/<sweep>/<experiment>/seed_<seed>.h5, results/training_curves.csv.gz
         ↓
 step2_estimate.sh       → results/routing_<sweep>.csv.gz   (routing MI, all estimators/protocols)
         ↓
@@ -59,8 +87,9 @@ Each step is **resumable**: already-completed work is detected and skipped.
 Pass `--force` to recompute from scratch.
 
 `results/` (gzipped CSVs, read directly by `pandas.read_csv`, plus
-`provenance.json`) is tracked in git, so the figures can be redrawn with step 5
-alone. `outputs/` (checkpoints and per-job CSVs) is not tracked.
+`provenance.json`) is tracked in git, and step 5 reads only `results/`, so the
+figures can be redrawn without `outputs/` (quick start A). `outputs/`
+(checkpoints and per-job CSVs) is not tracked.
 
 ---
 
@@ -99,7 +128,8 @@ Each `seed_<seed>.h5` stores:
   saved epoch: hidden layers `i = 1..L`, output layer `i = L+1` (PyTorch
   convention: `W[i].shape == (n_{i+1}, n_i)`)
 - `epochs/epoch_N` attributes — the six loss/accuracy values at that epoch
-- `training_results/` — the same six curves for every epoch (used for App. F)
+- `training_results/` — the same six curves for every epoch; step 1 exports
+  them for all networks to `results/training_curves.csv.gz` (used for App. F)
 - `points[N, d]`, `labels[N]` — the test split (never trained on; the `heldout` protocol)
 
 ---
@@ -184,7 +214,8 @@ At the last epoch:
 
 ## Step 5 — Figures (`step5_plot.sh`)
 
-All figures are written to `figures/` as both `.pdf` and `.png`.
+All figures are written to `figures/` as both `.pdf` and `.png`. Step 5 reads
+only `results/`, so it needs neither the trained networks nor the datasets.
 
 | File | Script | Description |
 |---|---|---|

@@ -6,6 +6,9 @@
         Train every configs/<sweep>/*/*.yaml whose HDF5 does not exist yet,
         N at a time (default: #CPUs − 2), one single-threaded process each.
         Each network's output goes to logs/train/<sweep>/<experiment>_seed_<s>.log.
+    python run_training.py --export-curves
+        Write the per-epoch training curves of every trained network to
+        results/training_curves.csv.gz (read by scripts/plot_training_curves.py).
 """
 
 import argparse
@@ -21,6 +24,9 @@ import yaml
 REPO = Path(__file__).resolve().parent
 # Ensure src_experiment is importable
 sys.path.append(str(REPO))
+
+CURVES = ("train_loss", "train_accuracy", "eval_train_loss", "eval_train_accuracy",
+          "test_loss", "test_accuracy")
 
 
 def _h5_path(cfg_path: Path) -> Path:
@@ -59,14 +65,52 @@ def train_sweeps(sweeps, workers: int, overwrite: bool) -> int:
     return failed
 
 
+def export_curves() -> None:
+    """One row per (network, epoch) with the six curves stored in each HDF5."""
+    import h5py
+    import pandas as pd
+
+    from src_experiment.results import SUFFIX, write_table
+
+    frames = []
+    for h5 in sorted((REPO / "outputs").glob("*/*/seed_*.h5")):
+        with h5py.File(h5, "r") as f:
+            a = f["metadata"].attrs
+            curves = {k: f[f"training_results/{k}"][:] for k in CURVES}
+            meta = {
+                "sweep": h5.parent.parent.name,
+                "dataset": str(a["dataset"]),
+                "arch_str": str([int(w) for w in a["architecture"]]),
+                "target_dim": int(a.get("target_dim", -1)),
+                "noise_level": float(a.get("noise", 0.0)),
+                "permute_labels": str(a.get("permute_labels", False)) == "True",
+                "seed": int(a["model_seed"]),
+            }
+        df = pd.DataFrame({"epoch": range(len(curves["test_accuracy"])), **curves})
+        for key, value in reversed(meta.items()):
+            df.insert(0, key, value)
+        frames.append(df)
+    if not frames:
+        sys.exit("no trained networks in outputs/")
+    out = REPO / "results" / f"training_curves{SUFFIX}"
+    out.parent.mkdir(exist_ok=True)
+    write_table(pd.concat(frames, ignore_index=True), out)
+    print(f"wrote curves of {len(frames)} networks to {out.relative_to(REPO)}")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("config", nargs="?", type=str, help="Path to one YAML configuration file.")
     parser.add_argument("--sweeps", nargs="+", help="Train all configs of these sweeps (configs/<sweep>/).")
     parser.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 1) - 2))
     parser.add_argument("--overwrite", action="store_true", help="Retrain even if the HDF5 exists.")
+    parser.add_argument("--export-curves", action="store_true",
+                        help="Write results/training_curves.csv.gz from the trained networks.")
     args = parser.parse_args()
 
+    if args.export_curves:
+        export_curves()
+        sys.exit(0)
     if args.sweeps:
         sys.exit(1 if train_sweeps(args.sweeps, args.workers, args.overwrite) else 0)
     if not args.config:

@@ -1,7 +1,8 @@
 """Training curves for all evaluated models.
 
-Reads the per-epoch curves stored in each HDF5 (``training_results``, written
-by step 1) of the clean networks and produces three figures (App. F):
+Reads the per-epoch curves of the clean networks from
+``results/training_curves.csv.gz`` (exported by step 1 from each HDF5's
+``training_results``) and produces three figures (App. F):
   figures/training_curves_composite.{pdf,png}
   figures/training_curves_wbc.{pdf,png}
   figures/training_curves_mnist.{pdf,png}
@@ -14,11 +15,9 @@ PCA dimensionality with a shared legend.
 from __future__ import annotations
 
 import ast
-import re
 import sys
 from pathlib import Path
 
-import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -27,9 +26,10 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.append(str(REPO))
 
 from src_experiment.paths import neurips_figpath  # noqa: E402
+from src_experiment.results import SUFFIX  # noqa: E402
 from src_experiment.smoke import LAST_EPOCH  # noqa: E402
 
-OUTPUTS = REPO / "outputs"
+CURVES_CSV = REPO / "results" / f"training_curves{SUFFIX}"
 FIGURES = neurips_figpath
 
 NOISE = 0.0
@@ -46,20 +46,12 @@ def _parse_arch(name: str) -> tuple[int, int]:
     return len(vals), vals[0]
 
 
-def _read_curves(h5_path: Path) -> dict[str, np.ndarray]:
-    with h5py.File(h5_path, "r") as f:
-        tr = f["training_results"]
-        return {
-            "test_acc": tr["test_accuracy"][:],
-            "test_loss": tr["test_loss"][:],
-        }
-
-
-def _collect(output_dir: Path) -> pd.DataFrame:
+def _collect(net: pd.DataFrame) -> pd.DataFrame:
+    """One row per seed with the test-accuracy and test-loss curves as arrays."""
     rows = []
-    for seed_path in sorted(output_dir.glob("seed_*.h5")):
-        seed = int(re.search(r"seed_(\d+)", seed_path.name).group(1))
-        rows.append({"seed": seed, **_read_curves(seed_path)})
+    for seed, g in net.sort_values("epoch").groupby("seed"):
+        rows.append({"seed": seed, "test_acc": g["test_accuracy"].to_numpy(),
+                     "test_loss": g["test_loss"].to_numpy()})
     return pd.DataFrame(rows)
 
 
@@ -97,16 +89,11 @@ def _twin_panel(
 # ─── composite / WBC ──────────────────────────────────────────────────────────
 
 
-def _load_noisy_dataset(output_root: Path) -> dict:
+def _load_noisy_dataset(curves: pd.DataFrame, sweep: str) -> dict:
     data: dict[float, dict[str, pd.DataFrame]] = {}
-    for exp_dir in sorted(output_root.iterdir()):
-        m = re.match(r"n([\d.]+)_(\[.+\])", exp_dir.name)
-        if not m:
-            continue
-        noise, arch = float(m.group(1)), m.group(2)
-        df = _collect(exp_dir)
-        if not df.empty:
-            data.setdefault(noise, {})[arch] = df
+    sub = curves[(curves["sweep"] == sweep) & ~curves["permute_labels"]]
+    for (noise, arch), net in sub.groupby(["noise_level", "arch_str"]):
+        data.setdefault(float(noise), {})[arch] = _collect(net)
     return data
 
 
@@ -174,16 +161,11 @@ def _plot_noisy_dataset(
 # ─── MNIST capacity ───────────────────────────────────────────────────────────
 
 
-def _load_mnist(output_root: Path) -> dict:
+def _load_mnist(curves: pd.DataFrame) -> dict:
     data: dict[int, dict[str, pd.DataFrame]] = {}
-    for exp_dir in sorted(output_root.iterdir()):
-        m = re.match(r"(\d+)_dim_(\[.+\])", exp_dir.name)
-        if not m:
-            continue
-        dim, arch = int(m.group(1)), m.group(2)
-        df = _collect(exp_dir)
-        if not df.empty:
-            data.setdefault(dim, {})[arch] = df
+    sub = curves[curves["sweep"] == "mnist_capacity"]
+    for (dim, arch), net in sub.groupby(["target_dim", "arch_str"]):
+        data.setdefault(int(dim), {})[arch] = _collect(net)
     return data
 
 
@@ -291,16 +273,18 @@ def _savefig(fig: plt.Figure, path: Path) -> None:
 def main() -> None:
     FIGURES.mkdir(parents=True, exist_ok=True)
 
-    print("Loading composite...")
-    comp_data = _load_noisy_dataset(OUTPUTS / "composite_label_noise")
+    curves = pd.read_csv(CURVES_CSV)
+
+    print("Composite...")
+    comp_data = _load_noisy_dataset(curves, "composite_label_noise")
     _plot_noisy_dataset(comp_data, "Composite", FIGURES / "training_curves_composite")
 
-    print("Loading WBC...")
-    wbc_data = _load_noisy_dataset(OUTPUTS / "wbc_label_noise")
+    print("WBC...")
+    wbc_data = _load_noisy_dataset(curves, "wbc_label_noise")
     _plot_noisy_dataset(wbc_data, "WBC", FIGURES / "training_curves_wbc")
 
-    print("Loading MNIST capacity...")
-    mnist_data = _load_mnist(OUTPUTS / "mnist_capacity")
+    print("MNIST capacity...")
+    mnist_data = _load_mnist(curves)
     _plot_mnist(mnist_data, FIGURES / "training_curves_mnist")
 
     print("Done.")
