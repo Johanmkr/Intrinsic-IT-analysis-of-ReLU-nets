@@ -90,4 +90,4 @@ jobs:
           mkdir -p figures-docker
           docker run --rm --network none --user "$(id -u):$(id -g)" \
             -v "$PWD/figures-docker:/app/figures" intrinsic-it-relu-nets step5
-          test "$(ls figures-docker/*.pdf | wc -l)" -eq 10
+          test "$(ls figures-docker/*.pdf | wc -l)" -eq 11

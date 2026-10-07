@@ -4,6 +4,7 @@ outputs/
 smoke/
 data/
 figures/
+latex/
 logs/
 .cache/
 configs/*

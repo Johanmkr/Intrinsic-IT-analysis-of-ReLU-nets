@@ -316,6 +316,7 @@ only `results/`, so it needs neither the trained networks nor the datasets.
 | `rho_func_layerwise` | `scripts/plot_rho_func_layerwise.py` | ρ_func by layer for ε ∈ {0, 0.1, 0.3, 0.5, 1.0, 2.0}; three dataset panels |
 | `composite_dataset` | `scripts/plot_composite_dataset.py` | App. B: the Composite training split after scaling, coloured by class |
 | `training_curves_{composite,wbc,mnist}` | `scripts/plot_training_curves.py` | App. F: test accuracy and loss over epochs (mean ± std over seeds) |
+| `occupancy_cdf` | `scripts/plot_occupancy.py` | App. F: region-size distribution at the deepest layer (fraction of points in regions of size ≤ n); three dataset panels, colour = width, line style = depth |
 
 The figures use the `heldout` protocol with `true_labels`.
 

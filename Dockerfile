@@ -36,9 +36,9 @@ RUN ./run.sh setup
 ENV HOME=/tmp \
     USER=reproducer \
     MPLCONFIGDIR=/tmp/matplotlib
-RUN mkdir -p outputs figures logs .cache \
+RUN mkdir -p outputs figures latex logs .cache \
     && chmod a+rwx . configs \
-    && chmod -R a+rwX outputs results figures logs .cache \
+    && chmod -R a+rwX outputs results figures latex logs .cache \
     && git config --system core.fileMode false
 
 ENTRYPOINT ["./run.sh"]
