@@ -16,6 +16,8 @@
 #
 # and results/summary/ (scripts/summarize_results.py): the appendix tables as
 # CSV and every number quoted in the text (numbers.json, SUMMARY.md).
+# Then latex/ (scripts/write_latex.py): numbers.tex (\res{key} macros) and
+# tables/*.tex for the manuscript; copy latex/ into the paper next to figures/.
 #
 # Usage:
 #   ./step5_plot.sh
@@ -56,6 +58,9 @@ $PYTHON scripts/plot_training_curves.py 2>&1 | tee -a "$LOG"
 
 banner "Summary tables and numbers (results/summary/)" | tee -a "$LOG"
 $PYTHON scripts/summarize_results.py 2>&1 | tee -a "$LOG"
+
+banner "LaTeX numbers and tables (latex/)" | tee -a "$LOG"
+$PYTHON scripts/write_latex.py 2>&1 | tee -a "$LOG"
 
 banner "Step 5 complete — log: $LOG"
 echo "Figures written to figures/:"

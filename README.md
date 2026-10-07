@@ -147,7 +147,7 @@ step3_baselines.sh      → results/baselines_<sweep>.csv.gz  (binning / k-means
         ↓
 step4_diagnostics.sh    → results/region_sizes_<sweep>.csv.gz, results/ordering_<sweep>.csv.gz
         ↓
-step5_plot.sh           → figures/*.pdf + figures/*.png, results/summary/ (tables + numbers)
+step5_plot.sh           → figures/*.pdf + figures/*.png, results/summary/ (tables + numbers), latex/
 
 results/provenance.json — git commit, settings and row counts of steps 2–4
 ```
@@ -317,6 +317,12 @@ git):
 Unless a file says otherwise these use the clean networks, the last epoch, the
 held-out points with true labels and the mean over seeds.
 
+`scripts/write_latex.py` (also step 5) turns these into LaTeX for the manuscript,
+in `latex/` (not tracked, like `figures/`): `numbers.tex` defines `\res{<key>}` for
+every key of `numbers.json` (e.g. `$r = \res{fig2.r.binning8}$`; an unknown key
+prints **??key**), and `tables/*.tex` holds the appendix tables as booktabs
+`tabular`s. Copy `latex/` into the manuscript next to `figures/`.
+
 ---
 
 ## Tests and CI
@@ -382,6 +388,7 @@ intrinsic_IT_analysis_of_relu_nets/
 │   ├── plot_composite_dataset.py
 │   ├── plot_training_curves.py
 │   ├── summarize_results.py       ← appendix tables + quoted numbers → results/summary/
+│   ├── write_latex.py             ← results/summary/ → latex/ (numbers.tex, tables/*.tex)
 │   └── export_site_data.py        ← demo data for the project page → site/data/
 │
 ├── src_experiment/                ← Python package (estimators + training)

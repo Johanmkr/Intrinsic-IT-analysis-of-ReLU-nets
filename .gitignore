@@ -14,6 +14,7 @@ __pycache__/
 # results/*.csv.gz and results/provenance.json are tracked; outputs/ is not.
 outputs/
 figures/
+latex/
 logs/
 smoke/
 configs/composite_label_noise/

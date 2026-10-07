@@ -113,6 +113,23 @@ def calibration() -> None:
     numbers["fig2.n"] = len(df)
     write(pd.DataFrame(rows), "calibration")
 
+    # Label entropy of the evaluated points (held-out) and of all points (in-sample)
+    for protocol in ("heldout", "insample"):
+        cells = clean_cells(protocol)
+        for ds, h in cells.groupby("dataset")["H_Y_bits"].mean().items():
+            numbers[f"hy.{ds}.{protocol}"] = float(h)
+
+    # Range of the plotted values, and KSG at the H(Y) ceiling on Composite
+    cols = [fig2.OURS_COL] + [c for c, _ in fig2.BASELINES]
+    numbers["fig2.max_bits"] = float(df[cols].max().max())
+    comp = df[df["dataset"] == "composite"]
+    h = numbers["hy.composite.heldout"]
+    numbers["fig2.composite.n"] = len(comp)
+    numbers["fig2.composite.ksg_within_0.02_of_H_Y"] = int(((h - comp["ksg3_bits"]).abs() < 0.02).sum())
+    numbers["fig2.composite.ksg_median"] = float(comp["ksg3_bits"].median())
+    numbers["fig2.composite.routing_min"] = float(comp[fig2.OURS_COL].min())
+    numbers["fig2.composite.routing_max"] = float(comp[fig2.OURS_COL].max())
+
 
 # ---------------------------------------------------------------------------
 # Exp 1 + Exp 10: bias corrections and seed variance
@@ -371,6 +388,7 @@ def summary_markdown() -> str:
     ]
     sections = {
         "fig2": "Fig. 2 calibration (plug-in routing MI vs baseline; same network, layer and points)",
+        "hy": "Label entropy H(Y) in bits (held-out points; insample = all points)",
         "mm": "Miller–Madow correction and seed variance (Exp 1; `bias_corrections_by_*.csv`)",
         "beyond_mm": "Other bias corrections at ρ > 0.9 (Exp 10; gap to H(Y) of the corrected value)",
         "heldout": "Held-out vs in-sample (Exp 5; `heldout_vs_insample.csv`)",

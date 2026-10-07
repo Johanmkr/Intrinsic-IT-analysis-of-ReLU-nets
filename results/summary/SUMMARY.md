@@ -8,6 +8,20 @@ Results from commit `c2417a82f1da86e8bbf45ccef3436cc921507b58`. Unless stated ot
 - `fig2.r.kmeansKY` = 0.9216
 - `fig2.r.ksg3` = 0.8916
 - `fig2.n` = 75
+- `fig2.max_bits` = 2.835
+- `fig2.composite.n` = 30
+- `fig2.composite.ksg_within_0.02_of_H_Y` = 23
+- `fig2.composite.ksg_median` = 2.631
+- `fig2.composite.routing_min` = 1.777
+- `fig2.composite.routing_max` = 2.629
+
+## Label entropy H(Y) in bits (held-out points; insample = all points)
+
+- `hy.composite.heldout` = 2.639
+- `hy.mnist.heldout` = 3.319
+- `hy.wbc.heldout` = 0.9495
+- `hy.composite.insample` = 2.639
+- `hy.wbc.insample` = 0.9526
 
 ## Miller–Madow correction and seed variance (Exp 1; `bias_corrections_by_*.csv`)
 
