@@ -5,6 +5,9 @@ estimate (routing information with six estimators, functional quotient, MI basel
 diagnostics), stores all results in `results/`, and draws the figures from them.
 Everything runs from this directory with one command per step.
 
+**Project page:** <https://johanmkr.github.io/Intrinsic_IT_analysis_of_ReLU_nets/>
+(abstract, links and interactive demos; source in `site/`).
+
 ---
 
 ## Requirements
