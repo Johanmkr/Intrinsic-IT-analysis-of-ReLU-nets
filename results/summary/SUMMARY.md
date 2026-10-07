@@ -139,6 +139,49 @@ Results from commit `c2417a82f1da86e8bbf45ccef3436cc921507b58`. Unless stated ot
 - `permutation.wbc.[25, 25, 25].permuted.train_label_accuracy` = 0.6558
 - `permutation.wbc.[5, 5, 5].permuted.train_label_accuracy` = 0.6277
 
+## Study 2: MNIST capacity sweep, last layer (`capacity.csv`; raw = ε 0, func = plug-in quotient)
+
+- `capacity.H_Y` = 3.319
+- `capacity.w7.d<=5.raw_max` = 2.134
+- `capacity.w7.d<=5.gap_min` = 1.185
+- `capacity.w15.d<=5.raw_max` = 2.974
+- `capacity.w15.d<=5.gap_min` = 0.3449
+- `capacity.w25.d<=5.raw_max` = 3.264
+- `capacity.w25.d<=5.gap_min` = 0.05565
+- `capacity.w50.d<=5.raw_max` = 3.317
+- `capacity.w50.d<=5.gap_min` = 0.00206
+- `capacity.eps0.1.below_raw_max` = 0.1746
+- `capacity.eps0.1.rho_func_min` = 0.7167
+- `capacity.eps0.2.below_raw_max` = 0.3843
+- `capacity.eps0.2.rho_func_min` = 0.4425
+- `capacity.eps0.3.d>=10.w7.gap_min` = 1.103
+- `capacity.eps0.3.d>=10.w7.gap_max` = 1.121
+- `capacity.eps0.3.d>=10.w15.gap_min` = 0.08792
+- `capacity.eps0.3.d>=10.w15.gap_max` = 0.1601
+- `capacity.eps0.3.d>=10.w25.gap_min` = 0.002106
+- `capacity.eps0.3.d>=10.w25.gap_max` = 0.01012
+- `capacity.eps0.3.d>=10.w50.gap_min` = 4e-05
+- `capacity.eps0.3.d>=10.w50.gap_max` = 0.00012
+- `capacity.eps0.5.d>=10.w7.gap_min` = 1.329
+- `capacity.eps0.5.d>=10.w7.gap_max` = 1.397
+- `capacity.eps0.5.d>=10.w15.gap_min` = 0.2663
+- `capacity.eps0.5.d>=10.w15.gap_max` = 0.4255
+- `capacity.eps0.5.d>=10.w25.gap_min` = 0.02668
+- `capacity.eps0.5.d>=10.w25.gap_max` = 0.07436
+- `capacity.eps0.5.d>=10.w50.gap_min` = 0.0002
+- `capacity.eps0.5.d>=10.w50.gap_max` = 0.004381
+- `capacity.eps2.d2.func_over_raw_min` = 0.7322
+- `capacity.eps2.d2.func_over_raw_max` = 0.8275
+- `capacity.window.max_abs_diff_eps0.3_eps0.5` = 0.3042
+
+## Per-network ρ_func over depth (networks of Fig. 6, ε > 0)
+
+- `rho_func_layerwise.n_networks` = 40
+- `rho_func_layerwise.n_curves` = 560
+- `rho_func_layerwise.n_curves_rising` = 232
+- `rho_func_layerwise.max_rise` = 0.2159
+- `rho_func_layerwise.layer1_all_one` = True
+
 ## Quotient ordering sensitivity (Exp 4; first-encounter order + random orders; `ordering_by_*.csv`)
 
 - `ordering.eps0.3.all_layers.n_cells` = 690

@@ -12,6 +12,7 @@ Reads only results/ and writes results/summary/:
   label_permutation.csv        Exp 2: clean vs label-permuted networks
   ordering_by_cell.csv         Exp 4: quotient spread over 16 visiting orders, per cell
   ordering_by_epsilon.csv      the same, summarised per ε
+  capacity.csv                 Study 2: raw and quotient MI, ρ, ρ_func per (width, d, ε)
   numbers.json                 every number quoted in the text, under a stable key
   SUMMARY.md                   the same numbers, readable, with the selection behind each
 
@@ -375,6 +376,61 @@ def ordering() -> None:
 
 
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Study 2 and Figs. [fig:mnist-capacity], [fig:rho-func-layerwise]: the ε window
+# ---------------------------------------------------------------------------
+def capacity() -> None:
+    df = deepest(routing("mnist_capacity"))
+    df = df[df["arch_str"].isin(MNIST_STUDY2) & df["target_dim"].isin(MNIST_DIMS_B)]
+    agg = (df.groupby(["arch_str", "target_dim", "epsilon"])
+             .agg(H_Y_bits=("H_Y_bits", "mean"), rho=("rho", "mean"), rho_func=("rho_func", "mean"),
+                  raw_mean=("plug_in_bits", "mean"), raw_std=("plug_in_bits", "std"),
+                  func_mean=("plug_in_func_bits", "mean"), func_std=("plug_in_func_bits", "std"))
+             .reset_index())
+    agg.insert(1, "width", agg["arch_str"].map(lambda a: int(a.strip("[]").split(",")[0])))
+    agg["func_below_raw"] = agg["raw_mean"] - agg["func_mean"]
+    agg["func_gap_to_H_Y"] = agg["H_Y_bits"] - agg["func_mean"]
+    write(agg, "capacity")
+
+    h = float(agg["H_Y_bits"].mean())
+    numbers["capacity.H_Y"] = h
+    raw = agg[agg["epsilon"] == 0.0]
+    for w, sub in raw.groupby("width"):
+        small = sub[sub["target_dim"] <= 5]
+        numbers[f"capacity.w{w}.d<=5.raw_max"] = float(small["raw_mean"].max())
+        numbers[f"capacity.w{w}.d<=5.gap_min"] = float(h - small["raw_mean"].max())
+    for eps in (0.1, 0.2):
+        sub = agg[np.isclose(agg["epsilon"], eps)]
+        numbers[f"capacity.eps{eps}.below_raw_max"] = float(sub["func_below_raw"].max())
+        numbers[f"capacity.eps{eps}.rho_func_min"] = float(sub["rho_func"].min())
+    for eps in (0.3, 0.5):
+        sub = agg[np.isclose(agg["epsilon"], eps) & (agg["target_dim"] >= 10)]
+        for w, s in sub.groupby("width"):
+            numbers[f"capacity.eps{eps}.d>=10.w{w}.gap_min"] = float(s["func_gap_to_H_Y"].min())
+            numbers[f"capacity.eps{eps}.d>=10.w{w}.gap_max"] = float(s["func_gap_to_H_Y"].max())
+    d2 = agg[(agg["target_dim"] == 2)].pivot_table(index="width", columns="epsilon", values="func_mean")
+    ratio = d2[2.0] / d2[0.0]
+    numbers["capacity.eps2.d2.func_over_raw_min"] = float(ratio.min())
+    numbers["capacity.eps2.d2.func_over_raw_max"] = float(ratio.max())
+    win = agg.pivot_table(index=["width", "target_dim"], columns="epsilon", values="func_mean")
+    numbers["capacity.window.max_abs_diff_eps0.3_eps0.5"] = float((win[0.3] - win[0.5]).abs().max())
+
+    # Per-network ρ_func curves over depth (the networks of [fig:rho-func-layerwise])
+    five = ["[5, 5, 5, 5, 5]", "[9, 9, 9, 9, 9]", "[25, 25, 25, 25, 25]"]
+    frames = [routing(s) for s in ("composite_label_noise", "wbc_label_noise")]
+    frames = [f[(f["noise_level"] == 0.0) & f["arch_str"].isin(five)] for f in frames]
+    m = routing("mnist_capacity")
+    frames.append(m[(m["target_dim"] == 10) & m["arch_str"].isin(["[5, 5, 5]", "[7, 7, 7]"])])
+    lw = pd.concat(frames, ignore_index=True)
+    lw = lw[lw["epsilon"] > 0].sort_values("layer")
+    rise = lw.groupby(["dataset", "arch_str", "seed", "epsilon"])["rho_func"].agg(lambda r: np.diff(r).max())
+    numbers["rho_func_layerwise.n_networks"] = int(lw.groupby(["dataset", "arch_str", "seed"]).ngroups)
+    numbers["rho_func_layerwise.n_curves"] = len(rise)
+    numbers["rho_func_layerwise.n_curves_rising"] = int((rise > 0).sum())
+    numbers["rho_func_layerwise.max_rise"] = float(rise.max())
+    numbers["rho_func_layerwise.layer1_all_one"] = bool(np.allclose(lw.loc[lw["layer"] == 1, "rho_func"], 1.0))
+
+
 def summary_markdown() -> str:
     prov = json.loads((RESULTS / "provenance.json").read_text())
     commit = prov.get("step2_estimate", {}).get("git_commit", "unknown")
@@ -396,6 +452,8 @@ def summary_markdown() -> str:
         "sensitivity": "Baseline hyperparameter sensitivity (Exp 6; MM-corrected binning/k-means, KSG; `baseline_sensitivity.csv`)",
         "occupancy": "Occupancy, deepest layer (Exp 7; `occupancy.csv`)",
         "permutation": f"Label permutation (Exp 2; deepest layer, quotient at ε = {EPS_QUOTIENT}; `label_permutation.csv`)",
+        "capacity": "Study 2: MNIST capacity sweep, last layer (`capacity.csv`; raw = ε 0, func = plug-in quotient)",
+        "rho_func_layerwise": "Per-network ρ_func over depth (networks of Fig. 6, ε > 0)",
         "ordering": f"Quotient ordering sensitivity (Exp 4; first-encounter order + random orders; `ordering_by_*.csv`)",
     }
     for prefix, title in sections.items():
@@ -418,6 +476,7 @@ def main() -> None:
     occupancy(cells)
     label_permutation()
     ordering()
+    capacity()
     clean = {k: (v.item() if hasattr(v, "item") else v) for k, v in numbers.items()}
     (OUT / "numbers.json").write_text(json.dumps(clean, indent=2, allow_nan=True) + "\n")
     (OUT / "SUMMARY.md").write_text(summary_markdown())

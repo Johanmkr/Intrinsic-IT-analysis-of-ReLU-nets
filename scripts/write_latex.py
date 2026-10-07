@@ -148,8 +148,7 @@ def heldout_vs_insample() -> None:
         if rows:
             groups.append(len(rows))
         for i, (_, s) in enumerate(sub.iterrows()):
-            rows.append([f"{DATASET_NAMES[ds]} ($N = {s.N_heldout:,} / {s.N_insample:,}$)".replace(",", "{,}")
-                         if i == 0 else "",
+            rows.append([DATASET_NAMES[ds] if i == 0 else "",
                          f"$[{arch(s.arch_str)[1:-1]}]$", f3(s.rho_heldout), f3(s.rho_insample),
                          f3(s.plug_in_bits_heldout), f3(s.plug_in_bits_insample), f3(s.delta_plug_in)])
     write("tables/heldout_vs_insample.tex", tabular("llrrrrr", header, rows, groups))
@@ -193,7 +192,7 @@ def occupancy() -> None:
         if rows:
             groups.append(len(rows))
         for i, (_, s) in enumerate(sub.iterrows()):
-            rows.append([f"{DATASET_NAMES[ds]} ($N = {int(s.N):,}$)".replace(",", "{,}") if i == 0 else "",
+            rows.append([DATASET_NAMES[ds] if i == 0 else "",
                          f"$[{arch(s.arch_str)[1:-1]}]$", f"{s.num_regions:.1f}", f3(s.rho),
                          f3(s.singleton_region_frac), f3(s.singleton_sample_frac)])
     write("tables/occupancy.tex", tabular("llrrrr", header, rows, groups))
@@ -218,7 +217,7 @@ def label_permutation() -> None:
         sub = by_arch(sub.sort_values("condition"))
         for i, (_, s) in enumerate(sub.iterrows()):
             train_acc = fit.loc[(ds, s.arch_str), "accuracy"] if s.condition == "permuted" else None
-            rows.append([f"{DATASET_NAMES[ds]} ($H(Y) = {s.H_Y_bits:.3f}$)" if i == 0 else "",
+            rows.append([DATASET_NAMES[ds] if i == 0 else "",
                          f"$[{arch(s.arch_str)[1:-1]}]$", s.condition,
                          f"{100 * s.accuracy:.1f}\\%",
                          "--" if train_acc is None else f"{100 * train_acc:.1f}\\%",

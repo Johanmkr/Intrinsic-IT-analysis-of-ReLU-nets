@@ -1,5 +1,16 @@
 # Intrinsic Information Theoretic Analysis of ReLU Nets — code
 
+[![NeurIPS 2026](https://img.shields.io/badge/NeurIPS-2026-8c1b13.svg)](https://openreview.net/forum?id=4dnKZPefBt)
+[![Project page](https://img.shields.io/badge/project-page-0a7bbb.svg)](https://johanmkr.github.io/Intrinsic_IT_analysis_of_ReLU_nets/)
+[![CI](https://github.com/Johanmkr/Intrinsic_IT_analysis_of_ReLU_nets/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Johanmkr/Intrinsic_IT_analysis_of_ReLU_nets/actions/workflows/ci.yml)
+[![Pages](https://github.com/Johanmkr/Intrinsic_IT_analysis_of_ReLU_nets/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/Johanmkr/Intrinsic_IT_analysis_of_ReLU_nets/actions/workflows/pages.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+[![Python 3.13](https://img.shields.io/badge/python-3.13-3776ab.svg?logo=python&logoColor=white)](.python-version)
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+[![PyTorch 2.11 (CPU)](https://img.shields.io/badge/PyTorch-2.11_CPU-ee4c2c.svg?logo=pytorch&logoColor=white)](pyproject.toml)
+[![Docker](https://img.shields.io/badge/Docker-reproducible-2496ed.svg?logo=docker&logoColor=white)](#c-docker)
+[![Cite](https://img.shields.io/badge/cite-CITATION.cff-blue.svg)](CITATION.cff)
+
 Experiment suite for the NeurIPS 2026 paper: trains every network, computes every
 estimate (routing information with six estimators, functional quotient, MI baselines,
 diagnostics), stores all results in `results/`, and draws the figures from them.
@@ -37,6 +48,14 @@ cd Intrinsic_IT_analysis_of_ReLU_nets
 
 Then either redraw the figures from the stored results (A) or rerun every
 experiment from scratch (B), with uv on your machine or with Docker (C).
+
+| With uv (A, then the smoke pipeline) | With Docker (C) |
+|---|---|
+| ![Clone, set up and run with uv](docs/demo/uv.gif) | ![Clone, build and run with Docker](docs/demo/docker.gif) |
+
+The long steps are cut from the recordings (see the run times below). The GIFs
+are recorded with [VHS](https://github.com/charmbracelet/vhs) from
+`docs/demo/*.tape`: `vhs docs/demo/uv.tape` from the repository root.
 
 ### A. Redraw the figures from the stored results (minutes)
 
@@ -81,6 +100,7 @@ files yours, not root's):
 docker build -t intrinsic-it-relu-nets .
 
 # A: figures from the stored results → ./figures
+mkdir -p figures   # else Docker creates it owned by root, and --user cannot write there
 docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/figures:/app/figures" \
     intrinsic-it-relu-nets step5
 
@@ -358,6 +378,7 @@ intrinsic_IT_analysis_of_relu_nets/
 ├── .github/workflows/ci.yml       ← GitHub Actions: tests, step 5, smoke, Docker, site tests
 ├── .github/workflows/pages.yml    ← publishes site/ to GitHub Pages
 ├── site/                          ← project page with interactive demos (see site/README.md)
+├── docs/demo/                     ← README GIFs and the VHS tapes that record them
 ├── run.sh                         ← entry point (setup/test/smoke/all/stepN)
 ├── Dockerfile                     ← reproduction image (entry point ./run.sh)
 ├── run_all.sh                     ← steps 1–5 end-to-end

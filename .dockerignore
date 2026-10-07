@@ -11,3 +11,5 @@ configs/*
 **/__pycache__/
 .pytest_cache/
 *.tmp
+# README demo recordings (docs/demo/*.tape)
+docs/demo/*.gif
