@@ -13,6 +13,7 @@
 #   rho_func_layerwise.{pdf,png}        — ρ_func by depth for multiple ε
 #   composite_dataset.{pdf,png}         — App. B: the Composite dataset
 #   training_curves_{composite,wbc,mnist}.{pdf,png} — App. F: test accuracy / loss
+#   occupancy_cdf.{pdf,png}             — App. F: region-size distribution
 #
 # and results/summary/ (scripts/summarize_results.py): the appendix tables as
 # CSV and every number quoted in the text (numbers.json, SUMMARY.md).
@@ -55,6 +56,9 @@ $PYTHON scripts/plot_composite_dataset.py 2>&1 | tee -a "$LOG"
 
 banner "Training curves (App. F)" | tee -a "$LOG"
 $PYTHON scripts/plot_training_curves.py 2>&1 | tee -a "$LOG"
+
+banner "Occupancy: region-size distribution (App. F)" | tee -a "$LOG"
+$PYTHON scripts/plot_occupancy.py 2>&1 | tee -a "$LOG"
 
 banner "Summary tables and numbers (results/summary/)" | tee -a "$LOG"
 $PYTHON scripts/summarize_results.py 2>&1 | tee -a "$LOG"
