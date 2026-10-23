@@ -16,7 +16,7 @@ estimate (routing information with six estimators, functional quotient, MI basel
 diagnostics), stores all results in `results/`, and draws the figures from them.
 Everything runs from this directory with one command per step.
 
-**Project page:** <https://johanmkr.github.io/Intrinsic_IT_analysis_of_ReLU_nets/>
+**Project page:** <https://johanmkr.github.io/Intrinsic-IT-analysis-of-ReLU-nets/>
 (abstract, links and interactive demos; source in `site/`).
 
 ---
@@ -62,7 +62,7 @@ are recorded with [VHS](https://github.com/charmbracelet/vhs) from
 All results of steps 1–4 are in git under `results/` (gzipped CSVs), so the
 figures can be drawn without training anything or downloading MNIST:
 
-```bash
+```bas-
 uv sync            # install the environment
 ./run.sh step5     # results/*.csv.gz → figures/*.pdf + figures/*.png
 ```
@@ -124,7 +124,9 @@ CPU; the environment uses the CPU-only PyTorch build.
 
 `./run.sh step1` … `./run.sh step5` run single steps; `all` and steps 1–4 accept
 `--force` to recompute and `--workers N` to limit parallelism (default:
-#CPUs − 2). `./run.sh test` runs the unit tests on the smoke checkpoints
+
+# CPUs − 2). `./run.sh test` runs the unit tests on the smoke checkpoints
+
 (~4 min; `--full`: on `outputs/`).
 
 The smoke run uses one seed, 11 epochs and PCA dims {2, 10} (`src_experiment/smoke.py`)
@@ -138,7 +140,7 @@ and each estimation job runs single-threaded, so wall time scales roughly with
 the number of workers; the CPU-hours column is wall time × workers.
 
 | Command | Wall time | ≈ CPU-hours |
-|---|---|---|
+| --- | --- | --- |
 | `./run.sh setup` (environment + MNIST/WBC download) | 1–2 min | — |
 | `./run.sh step5` (figures + `results/summary/` from `results/`) | 40 s | — |
 | `./run.sh smoke` | 5 min | — |
@@ -188,7 +190,7 @@ Trains four experiment sweeps, writing one HDF5 per (architecture, seed) to
 `outputs/<sweep>/`:
 
 | Sweep | Architectures | Labels | Seeds | Models |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | `composite_label_noise` | [5,5,5], [5,5,5,5,5], [9,9,9], [9,9,9,9,9], [25,25,25], [25,25,25,25,25] | clean | 101–105 | 30 |
 | `wbc_label_noise` | same 6 | clean | 101–105 | 30 |
 | `mnist_capacity` | [3,3,3], [5,5,5] at PCA-10; [7,7,7], [15,15,15], [25,25,25], [50,50,50] at PCA {2,3,4,5,10,15,20} | clean | 101–105 | 150 |
@@ -212,6 +214,7 @@ stay true.
 ### HDF5 layout
 
 Each `seed_<seed>.h5` stores:
+
 - `metadata/` — experiment config as HDF5 attributes
 - `epochs/epoch_N/l{i}.weight`, `l{i}.bias` — weights of every layer at each
   saved epoch: hidden layers `i = 1..L`, output layer `i = L+1` (PyTorch
@@ -244,7 +247,7 @@ hidden layer:
 Protocols:
 
 | Protocol | Composite | WBC | MNIST |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `heldout` — the 20 % test split stored with each network (never trained on) | N = 2 000 | N = 114 | N = 10 000 (MNIST test set) |
 | `insample` — all points, train split followed by test split | N = 10 000 | N = 569 | — |
 
@@ -271,7 +274,7 @@ and every hidden layer at the last epoch (`--all-epochs` for all), on the
 pre-activations T:
 
 | Family | Grid | Columns |
-|---|---|---|
+| --- | --- | --- |
 | Uniform per-neuron binning over [−max\|T\|, max\|T\|] | K ∈ {2, 4, 8, 16, 30} | `binning<K>_<estimator>_bits`, `binning<K>_num_cells` |
 | k-means (n_init = 10, seeded by the network seed) | K ∈ {\|Y\|, 2\|Y\|, 4\|Y\|, 16, 64, 256} (labels `KY`, `2KY`, `4KY`, `16`, …) | `kmeans<label>_<estimator>_bits`, `kmeans<label>_num_cells` |
 | KSG / Ross (2014), mixed continuous–discrete | k ∈ {3, 5, 10} | `ksg<k>_bits` (clipped at 0), `ksg<k>_signed_bits` |
@@ -307,7 +310,7 @@ All figures are written to `figures/` as both `.pdf` and `.png`. Step 5 reads
 only `results/`, so it needs neither the trained networks nor the datasets.
 
 | File | Script | Description |
-|---|---|---|
+| --- | --- | --- |
 | `pedagogical_figure1` | `scripts/plot_figure1_pedagogy.py` | Trains a tiny 2→4→4→2 network on moons; shows hyperplane partition and activation-pattern encoding |
 | `calibration_scatter_raw` | `scripts/plot_calibration_scatter.py` | Each baseline (x) vs plug-in routing MI (y), one point per clean network (n = 75: same held-out points, last layer, last epoch on both axes); Pearson r annotated |
 | `layer_profile_last_epoch` | `scripts/plot_layer_profile_last_epoch.py` | Bits vs layer depth at last epoch; averaged over archs and seeds; ±1σ shading; three datasets |
@@ -325,7 +328,7 @@ tables and every number quoted in the text to `results/summary/` (tracked in
 git):
 
 | File | Content |
-|---|---|
+| --- | --- |
 | `calibration.csv` | Fig. 2: n and Pearson r per baseline |
 | `bias_corrections_by_cell.csv`, `bias_corrections_by_rho.csv` | Miller–Madow, Grassberger, Chao–Shen, Chao–Wang–Jost and ANSB: mean, seed-std and correction per (dataset, architecture, PCA dim, layer), and averaged over ρ ranges |
 | `heldout_vs_insample.csv` | held-out vs in-sample routing MI and ρ (Composite, WBC) |
