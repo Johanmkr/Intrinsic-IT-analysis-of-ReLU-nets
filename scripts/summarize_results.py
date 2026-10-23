@@ -268,6 +268,8 @@ def baseline_sensitivity() -> None:
         numbers[f"sensitivity.{group}.n"] = int(g["n"].iloc[0])
         numbers[f"sensitivity.{group}.r_min"] = float(g["pearson_r"].min())
         numbers[f"sensitivity.{group}.r_max"] = float(g["pearson_r"].max())
+        for setting, r in zip(g["setting"], g["pearson_r"]):
+            numbers[f"sensitivity.{group}.r.{setting}"] = float(r)
         neg = g[g["pearson_r"] < 0]
         numbers[f"sensitivity.{group}.negative_r"] = ", ".join(
             f"{s} (r={r:.3f})" for s, r in zip(neg["setting"], neg["pearson_r"])) or "none"
