@@ -196,7 +196,7 @@ def get_new_data(dataset_name: str, noise: float = 0.0, batch_size: int = DEFAUL
         y_train = train_data.targets.numpy()
         y_test = test_data.targets.numpy()
         
-        # The paper uses the full 60k/10k MNIST split (App. C). Only ./run.sh smoke
+        # The paper uses the full 60k/10k MNIST split (App. D). Only ./run.sh smoke
         # subsamples both splits to 10% to keep the smoke run short.
         if SMOKE:
             rng_subsample = np.random.default_rng(split_seed)

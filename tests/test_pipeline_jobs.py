@@ -44,7 +44,8 @@ def test_step3_baselines_on_the_same_points(tiny_h5, tmp_path):
 
 def test_step4_order_zero_reproduces_step2(tiny_h5, tmp_path):
     j = job(tiny_h5, tmp_path / "routing.csv", ordering=True,
-            sizes_csv=tmp_path / "sizes.csv", ordering_csv=tmp_path / "ordering.csv")
+            sizes_csv=tmp_path / "sizes.csv", ordering_csv=tmp_path / "ordering.csv",
+            ties_csv=tmp_path / "ties.csv")
     run_diagnostics.run_one(j)
     sizes, order = pd.read_csv(j["sizes_csv"]), pd.read_csv(j["ordering_csv"])
     points = (sizes["region_size"] * sizes["num_regions"]).groupby(sizes["layer"]).sum()
@@ -56,6 +57,17 @@ def test_step4_order_zero_reproduces_step2(tiny_h5, tmp_path):
             assert o0.loc[r["layer"], "num_quotient"] == r["num_quotient"]
             assert o0.loc[r["layer"], "miller_madow_func_bits"] == pytest.approx(r["miller_madow_func_bits"], abs=1e-12)
     assert order["order"].nunique() == run_diagnostics.N_ORDERS + 1
+    ties = pd.read_csv(j["ties_csv"])
+    assert ties["layer"].tolist() == [1, 2, 3]
+    assert ((1 <= ties["tie_majority"]) & (ties["tie_majority"] <= ties["tie_size"]) & (ties["tie_size"] <= 400)).all()
+
+
+def test_largest_tie_finds_the_collapsed_group():
+    T = np.array([[1.0, 2.0], [0.5, 0.5], [0.5, 0.5], [0.5, 0.5], [3.0, 1.0]], dtype=np.float32)
+    y = np.array([0, 1, 1, 0, 1])
+    size, majority, group = run_diagnostics.largest_tie(T, y)
+    assert (size, majority) == (3, 2)
+    assert group.tolist() == [False, True, True, True, False]
 
 
 def test_write_table_is_deterministic(tmp_path):

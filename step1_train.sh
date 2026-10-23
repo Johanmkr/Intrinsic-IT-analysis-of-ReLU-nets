@@ -6,7 +6,7 @@
 # Each model is saved as outputs/<sweep>/<experiment_name>/seed_<seed>.h5;
 # per-network logs go to logs/train/. Already-trained models are skipped.
 # The per-epoch training curves of all networks are then exported to
-# results/training_curves.csv.gz (used for the App. F figures).
+# results/training_curves.csv.gz (used for the App. I figures).
 #
 # Usage:
 #   ./step1_train.sh                # all sweeps

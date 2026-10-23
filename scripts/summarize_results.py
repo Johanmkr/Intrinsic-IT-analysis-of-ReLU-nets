@@ -13,6 +13,8 @@ Reads only results/ and writes results/summary/:
   ordering_by_cell.csv         Exp 4: quotient spread over 16 visiting orders, per cell
   ordering_by_epsilon.csv      the same, summarised per ε
   capacity.csv                 Study 2: raw and quotient MI, ρ, ρ_func per (width, d, ε)
+  ksg_ties.csv                 App. [app:ksg_ties]: Fig. 2 networks whose last-layer
+                               representation has a large group of tied points
   numbers.json                 every number quoted in the text, under a stable key
   SUMMARY.md                   the same numbers, readable, with the selection behind each
 
@@ -48,6 +50,8 @@ MNIST_STUDY2 = ["[7, 7, 7]", "[15, 15, 15]", "[25, 25, 25]", "[50, 50, 50]"]  # 
 EPS_QUOTIENT = 0.3                                              # the paper's operating point
 PERMUTATION_ARCHS = ["[5, 5, 5]", "[25, 25, 25]"]
 RHO_RANGES = {"rho<0.05": (0.0, 0.05), "rho>0.3": (0.3, np.inf), "rho>0.9": (0.9, np.inf)}
+TIE_FRAC = 0.2      # a network is "tied" if this share of its points has one identical T
+PURE_FRAC = 0.95    # a tied group is "almost pure" if its majority class holds this share
 
 # Baseline settings of step 3: family, column prefix, submitted in the paper?
 BASELINE_SETTINGS = (
@@ -431,6 +435,76 @@ def capacity() -> None:
     numbers["rho_func_layerwise.layer1_all_one"] = bool(np.allclose(lw.loc[lw["layer"] == 1, "rho_func"], 1.0))
 
 
+# ---------------------------------------------------------------------------
+# App. [app:ksg_ties]: KSG on networks with tied representations
+# ---------------------------------------------------------------------------
+def ksg_ties() -> None:
+    import plot_calibration_scatter as fig2
+    import plot_layer_profile_last_epoch as fig3
+
+    key = ["dataset", "arch_str", "target_dim", "seed", "layer"]
+    ties = pd.concat([pd.read_csv(RESULTS / f"ties_{s}{SUFFIX}")
+                      for s in ("composite_label_noise", "wbc_label_noise", "mnist_capacity")], ignore_index=True)
+    ties = ties[(ties["epoch"] == LAST_EPOCH) & (ties["noise_level"] == 0.0)]
+    ties = ties.assign(tied_frac=ties["tie_size"] / ties["N"])
+    acc = pd.concat([routing(s) for s in ("composite_label_noise", "wbc_label_noise", "mnist_capacity")])
+    acc = acc.loc[(acc["epsilon"] == 0.0) & (acc["noise_level"] == 0.0), key + ["accuracy"]]
+    df = (paired_baselines().merge(ties, on=key, how="left", validate="one_to_one")
+          .merge(acc, on=key, how="left", validate="one_to_one"))
+    assert df["tie_size"].notna().all(), "run step 4 for the tie diagnostic"
+    df["tied"] = df["tied_frac"] >= TIE_FRAC
+    tied = df[df["tied"]].sort_values(["arch_str", "seed"], key=lambda c: c.map(depth) if c.name == "arch_str" else c,
+                                      ascending=[False, True])
+    write(tied[key + ["N", "accuracy", "plug_in_bits", "binning8_miller_madow_bits", "ksg3_signed_bits",
+                      "ksg3_bits", "tie_size", "tied_frac", "tie_majority", "tie_dead_upstream"]], "ksg_ties")
+
+    numbers["ksg_ties.n"] = len(tied)
+    numbers["ksg_ties.datasets"] = ", ".join(sorted(tied["dataset"].unique()))
+    numbers["ksg_ties.N"] = int(tied["N"].iloc[0])
+    numbers["ksg_ties.tied_frac_min"] = float(tied["tied_frac"].min())
+    numbers["ksg_ties.tied_frac_max"] = float(tied["tied_frac"].max())
+    numbers["ksg_ties.n_pure"] = int((tied["tie_majority"] >= PURE_FRAC * tied["tie_size"]).sum())
+    numbers["ksg_ties.n_dead_upstream"] = int(tied["tie_dead_upstream"].sum())
+    numbers["ksg_ties.n_ksg_raw_negative"] = int((tied["ksg3_signed_bits"] < 0).sum())
+    numbers["ksg_ties.ksg_max"] = float(tied["ksg3_bits"].max())
+    for col, name in (("plug_in_bits", "routing"), ("binning8_miller_madow_bits", "binning")):
+        numbers[f"ksg_ties.{name}_min"] = float(tied[col].min())
+        numbers[f"ksg_ties.{name}_max"] = float(tied[col].max())
+    for ds, sub in df[~df["tied"]].groupby("dataset"):
+        r = sub.loc[sub["tied_frac"].idxmax()]
+        numbers[f"ksg_ties.untied.{ds}.tied_frac_max"] = float(r["tied_frac"])
+        if ds in set(tied["dataset"]):
+            numbers[f"ksg_ties.untied.{ds}.arch"] = r["arch_str"]
+            numbers[f"ksg_ties.untied.{ds}.seed"] = int(r["seed"])
+            numbers[f"ksg_ties.untied.{ds}.ksg3"] = float(r["ksg3_bits"])
+
+    # Fig. 2: pooled KSG correlation with and without the tied networks
+    # (Fig. 2 calls MNIST "mnist_fc"; its MNIST networks are the PCA-10 ones of `df`)
+    tied_ids = set(zip(tied["dataset"], tied["arch_str"], tied["seed"]))
+    sc = fig2.load_data()
+    sc["tied"] = [n in tied_ids for n in zip(sc["dataset"].replace({"mnist_fc": "mnist"}), sc["arch_str"], sc["seed"])]
+    numbers["ksg_ties.fig2.r_ksg3.with"] = pearson(sc[fig2.OURS_COL], sc["ksg3_bits"])
+    numbers["ksg_ties.fig2.r_ksg3.without"] = pearson(sc.loc[~sc["tied"], fig2.OURS_COL], sc.loc[~sc["tied"], "ksg3_bits"])
+    numbers["ksg_ties.fig2.n_without"] = int((~sc["tied"]).sum())
+
+    # Fig. 3, WBC panel: mean KSG and routing MI per layer with and without the tied networks
+    names = set(zip(tied.loc[tied["dataset"] == "wbc", "arch_str"], tied.loc[tied["dataset"] == "wbc", "seed"]))
+    in_fig3 = [n for n in names if n[0] in fig3.ARCHS_FIVE]
+    numbers["ksg_ties.fig3.wbc.n_tied"] = len(in_fig3)
+    onset = ties[(ties["dataset"] == "wbc") & ties["tie_dead_upstream"] & (ties["tie_size"] > 1)]
+    onset = onset[[n in in_fig3 for n in zip(onset["arch_str"], onset["seed"])]].groupby(["arch_str", "seed"])["layer"].min()
+    numbers["ksg_ties.fig3.wbc.onset_layer_min"] = int(onset.min())
+    numbers["ksg_ties.fig3.wbc.onset_layer_max"] = int(onset.max())
+    for col, name, frame in (("ksg3_bits", "ksg3", fig3.baselines_for("wbc")), ("plug_in_bits", "routing", fig3.load_ours("wbc"))):
+        out = np.array([n in names for n in zip(frame["arch_str"], frame["seed"])])
+        for label, sub in (("with", frame), ("without", frame[~out])):
+            means = sub.groupby("layer")[col].mean()
+            for layer, v in means.items():
+                numbers[f"ksg_ties.fig3.wbc.{name}.{label}.l{layer}"] = float(v)
+            numbers[f"ksg_ties.fig3.wbc.{name}.{label}.min"] = float(means.min())
+            numbers[f"ksg_ties.fig3.wbc.{name}.{label}.max"] = float(means.max())
+
+
 def summary_markdown() -> str:
     prov = json.loads((RESULTS / "provenance.json").read_text())
     commit = prov.get("step2_estimate", {}).get("git_commit", "unknown")
@@ -453,7 +527,9 @@ def summary_markdown() -> str:
         "occupancy": "Occupancy, deepest layer (Exp 7; `occupancy.csv`)",
         "permutation": f"Label permutation (Exp 2; deepest layer, quotient at ε = {EPS_QUOTIENT}; `label_permutation.csv`)",
         "capacity": "Study 2: MNIST capacity sweep, last layer (`capacity.csv`; raw = ε 0, func = plug-in quotient)",
-        "rho_func_layerwise": "Per-network ρ_func over depth (networks of Fig. 6, ε > 0)",
+        "rho_func_layerwise": "Per-network ρ_func over depth (networks of [fig:rho-func-layerwise], ε > 0)",
+        "ksg_ties": f"KSG on tied representations (App. [app:ksg_ties]; tied = ≥ {TIE_FRAC:.0%} of the points "
+                    f"share one last-layer T; pure = majority class ≥ {PURE_FRAC:.0%}; `ksg_ties.csv`)",
         "ordering": f"Quotient ordering sensitivity (Exp 4; first-encounter order + random orders; `ordering_by_*.csv`)",
     }
     for prefix, title in sections.items():
@@ -477,6 +553,7 @@ def main() -> None:
     label_permutation()
     ordering()
     capacity()
+    ksg_ties()
     clean = {k: (v.item() if hasattr(v, "item") else v) for k, v in numbers.items()}
     (OUT / "numbers.json").write_text(json.dumps(clean, indent=2, allow_nan=True) + "\n")
     (OUT / "SUMMARY.md").write_text(summary_markdown())

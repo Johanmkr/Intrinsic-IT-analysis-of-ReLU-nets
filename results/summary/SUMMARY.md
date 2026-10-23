@@ -174,13 +174,69 @@ Results from commit `c2417a82f1da86e8bbf45ccef3436cc921507b58`. Unless stated ot
 - `capacity.eps2.d2.func_over_raw_max` = 0.8275
 - `capacity.window.max_abs_diff_eps0.3_eps0.5` = 0.3042
 
-## Per-network ρ_func over depth (networks of Fig. 6, ε > 0)
+## Per-network ρ_func over depth (networks of [fig:rho-func-layerwise], ε > 0)
 
 - `rho_func_layerwise.n_networks` = 40
 - `rho_func_layerwise.n_curves` = 560
 - `rho_func_layerwise.n_curves_rising` = 232
 - `rho_func_layerwise.max_rise` = 0.2159
 - `rho_func_layerwise.layer1_all_one` = True
+
+## KSG on tied representations (App. [app:ksg_ties]; tied = ≥ 20% of the points share one last-layer T; pure = majority class ≥ 95%; `ksg_ties.csv`)
+
+- `ksg_ties.n` = 5
+- `ksg_ties.datasets` = wbc
+- `ksg_ties.N` = 114
+- `ksg_ties.tied_frac_min` = 0.2281
+- `ksg_ties.tied_frac_max` = 0.7807
+- `ksg_ties.n_pure` = 4
+- `ksg_ties.n_dead_upstream` = 5
+- `ksg_ties.n_ksg_raw_negative` = 4
+- `ksg_ties.ksg_max` = 0.148
+- `ksg_ties.routing_min` = 0.3919
+- `ksg_ties.routing_max` = 0.9113
+- `ksg_ties.binning_min` = 0.2173
+- `ksg_ties.binning_max` = 0.7951
+- `ksg_ties.untied.composite.tied_frac_max` = 0.077
+- `ksg_ties.untied.mnist.tied_frac_max` = 0.0529
+- `ksg_ties.untied.wbc.tied_frac_max` = 0.1579
+- `ksg_ties.untied.wbc.arch` = [5, 5, 5]
+- `ksg_ties.untied.wbc.seed` = 105
+- `ksg_ties.untied.wbc.ksg3` = 0.4363
+- `ksg_ties.fig2.r_ksg3.with` = 0.8916
+- `ksg_ties.fig2.r_ksg3.without` = 0.8934
+- `ksg_ties.fig2.n_without` = 70
+- `ksg_ties.fig3.wbc.n_tied` = 4
+- `ksg_ties.fig3.wbc.onset_layer_min` = 3
+- `ksg_ties.fig3.wbc.onset_layer_max` = 3
+- `ksg_ties.fig3.wbc.ksg3.with.l1` = 0.8244
+- `ksg_ties.fig3.wbc.ksg3.with.l2` = 0.837
+- `ksg_ties.fig3.wbc.ksg3.with.l3` = 0.6433
+- `ksg_ties.fig3.wbc.ksg3.with.l4` = 0.6191
+- `ksg_ties.fig3.wbc.ksg3.with.l5` = 0.6226
+- `ksg_ties.fig3.wbc.ksg3.with.min` = 0.6191
+- `ksg_ties.fig3.wbc.ksg3.with.max` = 0.837
+- `ksg_ties.fig3.wbc.ksg3.without.l1` = 0.8235
+- `ksg_ties.fig3.wbc.ksg3.without.l2` = 0.8401
+- `ksg_ties.fig3.wbc.ksg3.without.l3` = 0.8348
+- `ksg_ties.fig3.wbc.ksg3.without.l4` = 0.8328
+- `ksg_ties.fig3.wbc.ksg3.without.l5` = 0.8355
+- `ksg_ties.fig3.wbc.ksg3.without.min` = 0.8235
+- `ksg_ties.fig3.wbc.ksg3.without.max` = 0.8401
+- `ksg_ties.fig3.wbc.routing.with.l1` = 0.5983
+- `ksg_ties.fig3.wbc.routing.with.l2` = 0.7746
+- `ksg_ties.fig3.wbc.routing.with.l3` = 0.8253
+- `ksg_ties.fig3.wbc.routing.with.l4` = 0.8439
+- `ksg_ties.fig3.wbc.routing.with.l5` = 0.8536
+- `ksg_ties.fig3.wbc.routing.with.min` = 0.5983
+- `ksg_ties.fig3.wbc.routing.with.max` = 0.8536
+- `ksg_ties.fig3.wbc.routing.without.l1` = 0.6753
+- `ksg_ties.fig3.wbc.routing.without.l2` = 0.8155
+- `ksg_ties.fig3.wbc.routing.without.l3` = 0.8732
+- `ksg_ties.fig3.wbc.routing.without.l4` = 0.8971
+- `ksg_ties.fig3.wbc.routing.without.l5` = 0.9047
+- `ksg_ties.fig3.wbc.routing.without.min` = 0.6753
+- `ksg_ties.fig3.wbc.routing.without.max` = 0.9047
 
 ## Quotient ordering sensitivity (Exp 4; first-encounter order + random orders; `ordering_by_*.csv`)
 

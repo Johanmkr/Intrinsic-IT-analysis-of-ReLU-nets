@@ -190,9 +190,9 @@
     }
   },
   "step4_diagnostics": {
-    "created": "2026-10-06T12:25:49+00:00",
-    "git_commit": "c2417a82f1da86e8bbf45ccef3436cc921507b58",
-    "git_dirty": false,
+    "created": "2026-10-23T12:33:23+00:00",
+    "git_commit": "a84297653bd074cde6110be899b36737ef9be3e4",
+    "git_dirty": true,
     "ordering_epsilons": [
       0.1,
       0.3,
@@ -209,6 +209,10 @@
         "rows": 7680,
         "missing_jobs": 0
       },
+      "ties_composite_label_noise": {
+        "rows": 120,
+        "missing_jobs": 0
+      },
       "region_sizes_wbc_label_noise": {
         "rows": 2446,
         "missing_jobs": 0
@@ -217,12 +221,20 @@
         "rows": 7680,
         "missing_jobs": 0
       },
+      "ties_wbc_label_noise": {
+        "rows": 120,
+        "missing_jobs": 0
+      },
       "region_sizes_mnist_capacity": {
         "rows": 19534,
         "missing_jobs": 0
       },
       "ordering_mnist_capacity": {
         "rows": 28800,
+        "missing_jobs": 0
+      },
+      "ties_mnist_capacity": {
+        "rows": 450,
         "missing_jobs": 0
       },
       "region_sizes_label_permutation": {

@@ -2,7 +2,7 @@
 
 Reads the per-epoch curves of the clean networks from
 ``results/training_curves.csv.gz`` (exported by step 1 from each HDF5's
-``training_results``) and produces three figures (App. F):
+``training_results``) and produces three figures (App. I):
   figures/training_curves_composite.{pdf,png}
   figures/training_curves_wbc.{pdf,png}
   figures/training_curves_mnist.{pdf,png}

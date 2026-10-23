@@ -4,11 +4,14 @@
 # Region-size histograms for every network, protocol and hidden layer, and the
 # ordering sensitivity of the functional quotient (first-encounter order vs 15
 # random visiting orders, ε ∈ {0.1, 0.3, 0.5, 1.0}) for every clean network on
-# the held-out points.
+# the held-out points. For the same networks and points, the largest group of
+# points with identical pre-activations at every hidden layer (ties, which break
+# the KSG baseline; App. G.5).
 #
 # Output:
 #   results/region_sizes_<sweep>.csv.gz
 #   results/ordering_{composite_label_noise,wbc_label_noise,mnist_capacity}.csv.gz
+#   results/ties_{composite_label_noise,wbc_label_noise,mnist_capacity}.csv.gz
 #   results/provenance.json
 #
 # Usage:
@@ -36,7 +39,7 @@ export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
 
 banner() { echo ""; echo "=== $1 ==="; echo ""; }
 
-banner "Region sizes and quotient ordering sensitivity" | tee -a "$LOG"
+banner "Region sizes, quotient ordering sensitivity and ties" | tee -a "$LOG"
 $PYTHON run_diagnostics.py "${ARGS[@]}" 2>&1 | tee -a "$LOG"
 
 banner "Aggregating" | tee -a "$LOG"

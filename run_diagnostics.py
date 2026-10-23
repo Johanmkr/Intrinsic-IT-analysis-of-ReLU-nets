@@ -9,9 +9,16 @@ ordering       The functional quotient visits regions in first-encounter order
                under N_ORDERS random visiting orders (order k uses random seed k)
                and scored with every estimator.
                → results/ordering_<sweep>.csv.gz
+ties           For every clean network, on the held-out points, every hidden
+               layer: the largest group of points with identical pre-activations
+               T (the representation the baselines see), its majority-class count,
+               and whether every point in it passed an earlier layer in which all
+               units are inactive (App. [app:ksg_ties]).
+               → results/ties_<sweep>.csv.gz
 
 One CSV per (network, protocol, kind) next to the HDF5; ``--aggregate``
-concatenates them.
+concatenates them. Without ``--force``, ordering CSVs that already exist are
+kept, so a new diagnostic can be added without recomputing them.
 
 Usage:
     python run_diagnostics.py [--sweeps ...] [--workers N] [--force]
@@ -61,6 +68,14 @@ def _write(df: pd.DataFrame, job: dict, path) -> None:
     tmp.replace(path)
 
 
+def largest_tie(T: np.ndarray, y: np.ndarray) -> tuple:
+    """Size and majority-class count of the largest group of identical rows of T,
+    and a mask selecting it."""
+    _, inverse, counts = np.unique(T, axis=0, return_inverse=True, return_counts=True)
+    group = inverse.ravel() == np.argmax(counts)
+    return int(counts.max()), int(np.bincount(y[group]).max()), group
+
+
 def run_one(job: dict) -> float:
     t0 = time.perf_counter()
     est = RoutingEstimator(job["h5"])
@@ -71,14 +86,26 @@ def run_one(job: dict) -> float:
     W, b = est._load_weights(epoch)
     patterns = forward_activation_patterns(W, b, X)
 
-    sizes, orders = [], []
+    sizes, orders, ties = [], [], []
+    do_ordering = job["ordering"] and (job.get("force") or not job["ordering_csv"].exists())
+    a, dead = np.asarray(X, dtype=np.float32), np.zeros(len(y), dtype=bool)
     for layer in range(1, est.num_hidden_layers + 1):
         omega = cumulative_pattern_hashes(patterns, layer)
         _, region_sizes = np.unique(omega, return_counts=True)
         for size, count in zip(*np.unique(region_sizes, return_counts=True)):
             sizes.append({"seed": est.seed, "epoch": epoch, "layer": layer, "N": len(y),
                           "region_size": int(size), "num_regions": int(count)})
-        if not job["ordering"]:
+        if job["ordering"]:
+            # Pre-activations T as in src_experiment/baselines/activations.py; `dead`
+            # marks points that passed an earlier layer with every unit inactive.
+            T = a @ W[layer - 1].T + b[layer - 1]
+            size, majority, group = largest_tie(T, y)
+            ties.append({"seed": est.seed, "epoch": epoch, "layer": layer, "N": len(y),
+                         "tie_size": size, "tie_majority": majority,
+                         "tie_dead_upstream": bool(dead[group].all())})
+            dead |= ~patterns[layer - 1].any(axis=1)
+            a = np.where(patterns[layer - 1], T, 0.0)
+        if not do_ordering:
             continue
         active = list(_build_active_data(W, b, collect_unique_region_patterns(patterns, omega, layer), layer).items())
         for order in range(N_ORDERS + 1):
@@ -94,6 +121,8 @@ def run_one(job: dict) -> float:
                                   all_mutual_information_bits(contingency_table(qids, y)).items()}})
     _write(pd.DataFrame(sizes), job, job["sizes_csv"])
     if job["ordering"]:
+        _write(pd.DataFrame(ties), job, job["ties_csv"])
+    if do_ordering:
         _write(pd.DataFrame(orders), job, job["ordering_csv"])
     return time.perf_counter() - t0
 
@@ -104,16 +133,18 @@ def jobs_for(sweeps: List[str]) -> List[dict]:
         name = j["csv"].name
         j["sizes_csv"] = j["csv"].with_name(name.replace("routing_", "regionsizes_", 1))
         j["ordering_csv"] = j["csv"].with_name(name.replace("routing_", "ordering_", 1))
+        j["ties_csv"] = j["csv"].with_name(name.replace("routing_", "ties_", 1))
         j["ordering"] = j["sweep"] in CLEAN_SWEEPS and j["protocol"] == "heldout"
     return jobs
 
 
 def _done(job: dict) -> bool:
-    return job["sizes_csv"].exists() and (not job["ordering"] or job["ordering_csv"].exists())
+    return job["sizes_csv"].exists() and (not job["ordering"] or (
+        job["ordering_csv"].exists() and job["ties_csv"].exists()))
 
 
 def run_jobs(jobs: List[dict], workers: int, force: bool) -> int:
-    todo = [j for j in jobs if force or not _done(j)]
+    todo = [{**j, "force": force} for j in jobs if force or not _done(j)]
     print(f"{len(jobs)} jobs, {len(jobs) - len(todo)} already done, running {len(todo)} "
           f"on {workers} worker(s)", flush=True)
     for dataset, seed in {(j["dataset"], j["global_seed"]) for j in todo if j["protocol"] != "heldout"}:
@@ -137,7 +168,7 @@ def aggregate(sweeps: List[str]) -> None:
     summary = {}
     for sweep in sweeps:
         jobs = jobs_for([sweep])
-        for kind, key in (("region_sizes", "sizes_csv"), ("ordering", "ordering_csv")):
+        for kind, key in (("region_sizes", "sizes_csv"), ("ordering", "ordering_csv"), ("ties", "ties_csv")):
             paths = [j[key] for j in jobs if kind == "region_sizes" or j["ordering"]]
             if not paths:
                 continue

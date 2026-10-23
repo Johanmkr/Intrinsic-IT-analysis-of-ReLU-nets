@@ -11,11 +11,15 @@ Reads results/summary/ (written by summarize_results.py) and writes latex/:
   tables/occupancy_mnist.tex     appendix: ρ per MNIST architecture and PCA dimension
   tables/label_permutation.tex   appendix: clean vs label-permuted networks
   tables/ordering.tex            appendix: quotient spread over visiting orders, per ε
+  tables/ksg_ties.tex            appendix: networks on which KSG collapses on tied points
 
 Copy latex/ into the manuscript next to figures/. The paper loads numbers.tex
 in its preamble and writes a number as \res{fig2.r.binning8}; an unknown key
 prints **??key** and a LaTeX warning. Tables are bare tabular environments
 (booktabs) to \input inside the paper's own table float and caption.
+
+ANSB is computed in step 2 but left out of the tables: it assumes
+N/|Ω_D| ≪ 1, which never holds here (N/|Ω_D| = 1/ρ ≥ 1).
 
 Formatting: integers as they are, floats with three decimals. Keys that hold
 a fraction (accuracy, *_frac, relative spread) also get a percent version
@@ -40,7 +44,6 @@ ESTIMATOR_NAMES = {
     "grassberger": "Grassberger",
     "chao_shen": "Chao--Shen",
     "chao_wang_jost": "Chao--Wang--Jost",
-    "ansb": "ANSB$^\\dagger$",
 }
 RHO_RANGES = {"rho<0.05": "$\\rho < 0.05$", "rho>0.3": "$\\rho > 0.3$", "rho>0.9": "$\\rho > 0.9$"}
 DATASET_NAMES = {"composite": "Composite", "wbc": "WBC", "mnist": "MNIST"}
@@ -240,6 +243,15 @@ def ordering() -> None:
     write("tables/ordering.tex", tabular("lrrrrrrr", header, rows, groups))
 
 
+def ksg_ties() -> None:
+    df = pd.read_csv(SUMMARY / "ksg_ties.csv")
+    header = ["Architecture", "Seed", "Test acc.", "$\\hat I$", "Binning", "KSG raw", "KSG", "Tied points"]
+    rows = [[f"$[{arch(s.arch_str)[1:-1]}]$", str(s.seed), f"{100 * s.accuracy:.1f}\\%",
+             f3(s.plug_in_bits), f3(s.binning8_miller_madow_bits), f"${s.ksg3_signed_bits:.3f}$",
+             f3(s.ksg3_bits), f"{s.tie_size} ({100 * s.tied_frac:.0f}\\%)"] for s in df.itertuples()]
+    write("tables/ksg_ties.tex", tabular("lrrrrrrr", header, rows))
+
+
 def main() -> None:
     print("Writing latex/:")
     numbers_tex()
@@ -249,6 +261,7 @@ def main() -> None:
     occupancy()
     label_permutation()
     ordering()
+    ksg_ties()
 
 
 if __name__ == "__main__":

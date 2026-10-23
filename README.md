@@ -161,6 +161,77 @@ one core). The Docker image builds in about one minute (1.6 GB).
 
 ---
 
+## Paper ↔ code
+
+Where each element of the paper comes from. Numbering follows the NeurIPS 2026
+camera-ready; the LaTeX label is given in brackets. Every script below runs in
+step 5 and reads only `results/`.
+
+### Method
+
+| Paper | Code |
+| --- | --- |
+| Data-supported regions Ω_D, activation patterns (§3.1) | `src_experiment/routing_estimator.py`: `forward_activation_patterns`, `cumulative_pattern_hashes` |
+| Plug-in routing estimator, Eq. 4 [eq:plugin]; occupancy ρ, Eq. 6 [eq:rho] | `src_experiment/routing_estimator.py`: `routing_information` |
+| Functional equivalence, Eq. 7 [eq:func_equiv]; ρ_func, Eq. 9 [eq:rho_func] | `src_experiment/functional_quotient.py`: `are_functionally_equivalent`, `FunctionalQuotientEstimator` |
+| Algorithm 1 [alg:func_cluster] (App. F) | `src_experiment/functional_quotient.py`: `compute_active_subnetwork`, `cluster_functional` |
+| Bias corrections: Miller–Madow, Grassberger, Chao–Shen, Chao–Wang–Jost, ANSB (App. G.2) | `src_experiment/estimators.py` |
+| Baselines: binning, k-means, KSG (§4.1, App. G.4) | `src_experiment/baselines/mi_baselines.py`, run by `run_baselines.py` (step 3) |
+| Datasets: Composite, WBC, MNIST FC (App. B–D) | `src_experiment/dataset.py`, configs from `configs/generate_*.py` |
+
+### Figures
+
+| Paper | File in `figures/` | Script | Input in `results/` |
+| --- | --- | --- | --- |
+| Fig. 1 [fig:pedagogical_figure] | `pedagogical_figure1` | `scripts/plot_figure1_pedagogy.py` | none (trains its own toy network) |
+| Fig. 2 [fig:calibration-scatter] | `calibration_scatter_raw` | `scripts/plot_calibration_scatter.py` | `routing_*`, `baselines_*` |
+| Fig. 3 [fig:layer-profile] | `layer_profile_last_epoch` | `scripts/plot_layer_profile_last_epoch.py` | `routing_*`, `baselines_*` |
+| Fig. 4 [fig:mnist-capacity] | `mnist_capacity_bars_per_arch` | `scripts/plot_mnist_capacity_bars.py` | `routing_mnist_capacity` |
+| Fig. 5 [fig:mnist-rho-eps] | `mnist_rho_vs_eps` | `scripts/plot_mnist_functional_pca_sweep.py --type rho` | `routing_mnist_capacity` |
+| Fig. 6 [fig:composite_dataset] (App. B) | `composite_dataset` | `scripts/plot_composite_dataset.py` | none (regenerates the dataset) |
+| Fig. 7 [fig:rho-func-layerwise] (App. F) | `rho_func_layerwise` | `scripts/plot_rho_func_layerwise.py` | `routing_*` |
+| Fig. 8 [fig:occupancy] (App. G.1) | `occupancy_cdf` | `scripts/plot_occupancy.py` | `region_sizes_*` |
+| Figs. 9–11 [fig:{composite,wbc,mnist}_metrics] (App. I) | `training_curves_{composite,wbc,mnist}` | `scripts/plot_training_curves.py` | `training_curves` |
+
+### Tables
+
+The tables are computed by `scripts/summarize_results.py` (CSV in
+`results/summary/`) and typeset by `scripts/write_latex.py` (in `latex/tables/`).
+
+| Paper | `latex/tables/` | `results/summary/` |
+| --- | --- | --- |
+| Table 1 [tab:bias_by_rho_compact] (§5.1) | `bias_by_rho_compact.tex` | `bias_corrections_by_rho.csv` |
+| Table 2 [tab:occupancy] (App. G.1) | `occupancy.tex` | `occupancy.csv` |
+| Table 3 [tab:occupancy_mnist] (App. G.1) | `occupancy_mnist.tex` | `occupancy.csv` |
+| Table 4 [tab:bias_by_rho] (App. G.2) | `bias_by_rho.tex` | `bias_corrections_by_cell.csv`, `bias_corrections_by_rho.csv` |
+| Table 5 [tab:heldout] (App. G.3) | `heldout_vs_insample.tex` | `heldout_vs_insample.csv` |
+| Table 6 [tab:baseline_sensitivity] (App. G.4) | `baseline_sensitivity.tex` | `baseline_sensitivity.csv` |
+| Table 7 [tab:ksg_ties] (App. G.5) | `ksg_ties.tex` | `ksg_ties.csv` |
+| Table 8 [tab:label_permutation] (App. G.6) | `label_permutation.tex` | `label_permutation.csv` |
+| Table 9 [tab:ordering] (App. G.7) | `ordering.tex` | `ordering_by_cell.csv`, `ordering_by_epsilon.csv` |
+
+### Numbers in the text
+
+Each number the paper quotes from the experiments is a `\res{<key>}` macro
+defined in `latex/numbers.tex`, generated from `results/summary/numbers.json`.
+`results/summary/SUMMARY.md` lists every key with its value and the data
+selection behind it. Key prefixes, grouped by the function in
+`scripts/summarize_results.py` that computes them:
+
+| Key prefix | Function | Used in |
+| --- | --- | --- |
+| `fig2.`, `hy.` | `calibration` | §4–7 (Fig. 2 correlations, label entropies H(Y)) |
+| `mm.`, `beyond_mm.` | `bias_corrections` | §5.1, App. G.2 |
+| `heldout.`, `wbc_rho.` | `heldout_vs_insample` | §4–6, App. B.4, G.3 |
+| `sensitivity.` | `baseline_sensitivity` | App. G.4 |
+| `occupancy.` | `occupancy` | App. G.1 |
+| `permutation.` | `label_permutation` | §6, App. G.6 |
+| `ordering.` | `ordering` | App. F, G.7 |
+| `capacity.`, `rho_func_layerwise.` | `capacity` | §5.3, §6, App. F |
+| `ksg_ties.` | `ksg_ties` | App. G.5 |
+
+---
+
 ## Pipeline overview
 
 ```
@@ -172,7 +243,7 @@ step2_estimate.sh       → results/routing_<sweep>.csv.gz   (routing MI, all es
         ↓
 step3_baselines.sh      → results/baselines_<sweep>.csv.gz  (binning / k-means / KSG grid)
         ↓
-step4_diagnostics.sh    → results/region_sizes_<sweep>.csv.gz, results/ordering_<sweep>.csv.gz
+step4_diagnostics.sh    → results/{region_sizes,ordering,ties}_<sweep>.csv.gz
         ↓
 step5_plot.sh           → figures/*.pdf + figures/*.png, results/summary/ (tables + numbers), latex/
 
@@ -226,7 +297,7 @@ Each `seed_<seed>.h5` stores:
   convention: `W[i].shape == (n_{i+1}, n_i)`)
 - `epochs/epoch_N` attributes — the six loss/accuracy values at that epoch
 - `training_results/` — the same six curves for every epoch; step 1 exports
-  them for all networks to `results/training_curves.csv.gz` (used for App. F)
+  them for all networks to `results/training_curves.csv.gz` (used for App. I)
 - `points[N, d]`, `labels[N]` — the test split (never trained on; the `heldout` protocol)
 
 ---
@@ -306,6 +377,15 @@ At the last epoch:
   under 15 random visiting orders (`order` = k uses random seed k), with
   `num_quotient` and every `<estimator>_func_bits` (`results/ordering_<sweep>.csv.gz`).
   Order 0 reproduces step 2 exactly.
+- **Ties** — for the same networks and points, at every hidden layer, the
+  largest group of points with identical pre-activations T (the representation
+  the baselines see): `tie_size`, its majority-class count `tie_majority`, and
+  `tie_dead_upstream`, whether every point in it passed an earlier layer with
+  all units inactive (`results/ties_<sweep>.csv.gz`). Such groups break the KSG
+  baseline (App. G.5).
+
+Without `--force`, existing ordering CSVs are kept, so only missing diagnostics
+are computed.
 
 ---
 
@@ -323,8 +403,8 @@ only `results/`, so it needs neither the trained networks nor the datasets.
 | `mnist_rho_vs_eps` | `scripts/plot_mnist_functional_pca_sweep.py --type rho` | ρ_func vs ε at last epoch; 1×4 arch panels (one per width); lines per PCA dim |
 | `rho_func_layerwise` | `scripts/plot_rho_func_layerwise.py` | ρ_func by layer for ε ∈ {0, 0.1, 0.3, 0.5, 1.0, 2.0}; three dataset panels |
 | `composite_dataset` | `scripts/plot_composite_dataset.py` | App. B: the Composite training split after scaling, coloured by class |
-| `training_curves_{composite,wbc,mnist}` | `scripts/plot_training_curves.py` | App. F: test accuracy and loss over epochs (mean ± std over seeds) |
-| `occupancy_cdf` | `scripts/plot_occupancy.py` | App. F: region-size distribution at the deepest layer (fraction of points in regions of size ≤ n); three dataset panels, colour = width, line style = depth |
+| `training_curves_{composite,wbc,mnist}` | `scripts/plot_training_curves.py` | App. I: test accuracy and loss over epochs (mean ± std over seeds) |
+| `occupancy_cdf` | `scripts/plot_occupancy.py` | App. G.1: region-size distribution at the deepest layer (fraction of points in regions of size ≤ n); three dataset panels, colour = width, line style = depth |
 
 The figures use the `heldout` protocol with `true_labels`.
 
@@ -341,6 +421,7 @@ git):
 | `occupancy.csv` | ρ and singleton fractions per configuration (deepest layer) |
 | `label_permutation.csv` | clean vs label-permuted networks: raw and quotient MI (ε = 0.3), ρ, accuracy |
 | `ordering_by_cell.csv`, `ordering_by_epsilon.csv` | spread of the functional quotient over 16 visiting orders |
+| `ksg_ties.csv` | Fig. 2 networks in which ≥ 20 % of the points share one last-layer representation, with their routing MI, binning and KSG values |
 | `numbers.json`, `SUMMARY.md` | every number quoted in the text, under a stable key, with the selection behind it |
 
 Unless a file says otherwise these use the clean networks, the last epoch, the
@@ -349,8 +430,9 @@ held-out points with true labels and the mean over seeds.
 `scripts/write_latex.py` (also step 5) turns these into LaTeX for the manuscript,
 in `latex/` (not tracked, like `figures/`): `numbers.tex` defines `\res{<key>}` for
 every key of `numbers.json` (e.g. `$r = \res{fig2.r.binning8}$`; an unknown key
-prints **??key**), and `tables/*.tex` holds the appendix tables as booktabs
-`tabular`s. Copy `latex/` into the manuscript next to `figures/`.
+prints **??key**), and `tables/*.tex` holds the tables as booktabs
+`tabular`s. ANSB is computed in steps 2–3 but left out of the tables, since it
+assumes N/|Ω_D| ≪ 1, which never holds here. Copy `latex/` into the manuscript next to `figures/`.
 
 ---
 
@@ -406,7 +488,7 @@ intrinsic_IT_analysis_of_relu_nets/
 ├── run_training.py                ← step 1: training (one config or whole sweeps, parallel)
 ├── run_estimate.py                ← step 2: routing MI, all sweeps/protocols
 ├── run_baselines.py               ← step 3: MI baselines, all clean networks/protocols
-├── run_diagnostics.py             ← step 4: region sizes, ordering sensitivity
+├── run_diagnostics.py             ← step 4: region sizes, ordering sensitivity, ties
 │
 ├── scripts/
 │   ├── plot_figure1_pedagogy.py

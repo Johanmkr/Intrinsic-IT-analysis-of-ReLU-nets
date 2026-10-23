@@ -1,4 +1,4 @@
-"""Region-size distribution at the deepest layer (App. F, occupancy).
+"""Region-size distribution at the deepest layer (App. G.1, occupancy).
 
 For each architecture, the fraction of points that lie in a region holding at
 most n points, as a function of the region size n (log axis). The curve starts
