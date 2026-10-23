@@ -190,9 +190,9 @@
     }
   },
   "step4_diagnostics": {
-    "created": "2026-10-23T12:33:23+00:00",
-    "git_commit": "a84297653bd074cde6110be899b36737ef9be3e4",
-    "git_dirty": true,
+    "created": "2026-10-23T12:56:27+00:00",
+    "git_commit": "3f610ebe3b07267864a33d03a0566d24017f14d3",
+    "git_dirty": false,
     "ordering_epsilons": [
       0.1,
       0.3,
