@@ -1,5 +1,7 @@
 """Step 2: routing information of every trained network, for every protocol.
 
+Raw routing MI is Eq. 4 [eq:plugin], the quotient Eq. 8 [eq:func_chain].
+
 For each ``outputs/<sweep>/<experiment>/seed_<s>.h5`` and each protocol of its
 sweep, :class:`FunctionalQuotientEstimator` computes the raw and ε-quotient
 routing MI with every estimator in :mod:`src_experiment.estimators`, at every
@@ -13,7 +15,9 @@ Protocols (``protocol`` column):
             Composite N=2000, WBC N=114, MNIST N=10000.
   insample  every point of the dataset, train split followed by the test
             split (Composite N=10000, WBC N=569). Not run for MNIST.
-  train     the train split only (label-permutation sweep).
+            Compared with heldout in App. G.3 [app:heldout].
+  train     the train split only (label-permutation sweep, App. G.6
+            [app:label_permutation]).
 
 Labels (``labels`` column): ``true_labels`` everywhere; for the
 label-permutation sweep also ``train_labels``, the permuted labels the network

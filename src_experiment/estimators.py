@@ -1,12 +1,15 @@
 """Bias-corrected plug-in estimators of I(Y; Ω) from a region × class count table.
 
+The corrections of App. G.2 [app:bias_corrections], reported in Table 1
+[tab:bias_by_rho_compact] and Table 4 [tab:bias_by_rho].
+
 Every estimator here is a discrete entropy estimator Ĥ applied to the three
 count vectors of the contingency table and combined as
 
     Î(Y; Ω) = Ĥ(Ω) + Ĥ(Y) − Ĥ(Ω, Y),
 
-which is how ``infomeasure`` 0.6.2 (used for rebuttal Exp 10) builds its MI
-estimates; ``tests/test_estimators.py`` checks the two against each other.
+which is how ``infomeasure`` 0.6.2 (App. H [app:implementation]) builds its
+MI estimates; ``tests/test_estimators.py`` checks the two against each other.
 The exception is Miller–Madow, which uses the paper's MI-level correction
 Î − (|Ω| − 1)(|Y| − 1) / (2N ln 2), as in
 :func:`routing_estimator.routing_information`.
@@ -104,7 +107,8 @@ def entropy_ansb(counts: np.ndarray) -> float:
 
     Undefined (NaN) without coincidences (K = N). Only valid when strongly
     undersampled (N/K ≪ 1), a regime this estimator's callers report but
-    never reach, since K ≤ N always.
+    never reach, since K ≤ N always; hence it is not reported in the paper
+    (App. G.2 [app:bias_corrections]).
     """
     n = _counts(counts)
     N, K = int(n.sum()), len(n)

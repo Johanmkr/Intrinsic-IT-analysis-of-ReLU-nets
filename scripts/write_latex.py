@@ -3,22 +3,22 @@ r"""LaTeX for the camera-ready manuscript, from results/summary/ (step 5).
 Reads results/summary/ (written by summarize_results.py) and writes latex/:
 
   numbers.tex                    every entry of numbers.json as \res{<key>}
-  tables/bias_by_rho_compact.tex main text: mean bias correction per ρ regime
-  tables/bias_by_rho.tex         appendix: value, correction, seed-std and gap to H(Y)
-  tables/heldout_vs_insample.tex appendix: held-out vs in-sample, deepest layer
-  tables/baseline_sensitivity.tex appendix: Pearson r for every baseline setting
-  tables/occupancy.tex           appendix: ρ and singleton fractions, Composite and WBC
-  tables/occupancy_mnist.tex     appendix: ρ per MNIST architecture and PCA dimension
-  tables/label_permutation.tex   appendix: clean vs label-permuted networks
-  tables/ordering.tex            appendix: quotient spread over visiting orders, per ε
-  tables/ksg_ties.tex            appendix: networks on which KSG collapses on tied points
+  tables/bias_by_rho_compact.tex Table 1 [tab:bias_by_rho_compact], §5.1: mean bias correction per ρ regime
+  tables/bias_by_rho.tex         Table 4 [tab:bias_by_rho], App. G.2: value, correction, seed-std and gap to H(Y)
+  tables/heldout_vs_insample.tex Table 5 [tab:heldout], App. G.3: held-out vs in-sample, deepest layer
+  tables/baseline_sensitivity.tex Table 6 [tab:baseline_sensitivity], App. G.4: Pearson r for every baseline setting
+  tables/occupancy.tex           Table 2 [tab:occupancy], App. G.1: ρ and singleton fractions, Composite and WBC
+  tables/occupancy_mnist.tex     Table 3 [tab:occupancy_mnist], App. G.1: ρ per MNIST architecture and PCA dimension
+  tables/label_permutation.tex   Table 8 [tab:label_permutation], App. G.6: clean vs label-permuted networks
+  tables/ordering.tex            Table 9 [tab:ordering], App. G.7: quotient spread over visiting orders, per ε
+  tables/ksg_ties.tex            Table 7 [tab:ksg_ties], App. G.5: networks on which KSG collapses on tied points
 
 Copy latex/ into the manuscript next to figures/. The paper loads numbers.tex
 in its preamble and writes a number as \res{fig2.r.binning8}; an unknown key
 prints **??key** and a LaTeX warning. Tables are bare tabular environments
 (booktabs) to \input inside the paper's own table float and caption.
 
-ANSB is computed in step 2 but left out of the tables: it assumes
+ANSB is computed in step 2 but left out of the tables (App. G.2): it assumes
 N/|Ω_D| ≪ 1, which never holds here (N/|Ω_D| = 1/ρ ≥ 1).
 
 Formatting: integers as they are, floats with three decimals. Keys that hold

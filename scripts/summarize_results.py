@@ -2,18 +2,21 @@
 
 Reads only results/ and writes results/summary/:
 
-  calibration.csv              Fig. [fig:calibration-scatter]: n and Pearson r per baseline
-  bias_corrections_by_cell.csv Exp 1 + Exp 10: every estimator per (dataset, arch, dim, layer),
+  calibration.csv              Fig. 2 [fig:calibration-scatter]: n and Pearson r per baseline
+  bias_corrections_by_cell.csv Table 4 [tab:bias_by_rho]: every estimator per (dataset, arch, dim, layer),
                                mean and seed-std over seeds, correction = plug-in − estimator
-  bias_corrections_by_rho.csv  the same, averaged over cells in ρ ranges (headline numbers)
-  heldout_vs_insample.csv      Exp 5: held-out vs in-sample routing MI and ρ (Composite, WBC)
-  baseline_sensitivity.csv     Exp 6: Pearson r of plug-in routing MI vs every baseline setting
-  occupancy.csv                Exp 7: ρ and singleton fractions per configuration
-  label_permutation.csv        Exp 2: clean vs label-permuted networks
-  ordering_by_cell.csv         Exp 4: quotient spread over 16 visiting orders, per cell
+  bias_corrections_by_rho.csv  Tables 1 and 4 [tab:bias_by_rho_compact, tab:bias_by_rho]: the same,
+                               averaged over cells in ρ ranges (headline numbers)
+  heldout_vs_insample.csv      Table 5 [tab:heldout]: held-out vs in-sample routing MI and ρ (Composite, WBC)
+  baseline_sensitivity.csv     Table 6 [tab:baseline_sensitivity]: Pearson r of plug-in routing MI vs every baseline setting
+  occupancy.csv                Tables 2 and 3 [tab:occupancy, tab:occupancy_mnist]: ρ and
+                               singleton fractions per configuration
+  label_permutation.csv        Table 8 [tab:label_permutation]: clean vs label-permuted networks
+  ordering_by_cell.csv         Table 9 [tab:ordering]: quotient spread over 16 visiting orders, per cell
   ordering_by_epsilon.csv      the same, summarised per ε
-  capacity.csv                 Study 2: raw and quotient MI, ρ, ρ_func per (width, d, ε)
-  ksg_ties.csv                 App. [app:ksg_ties]: Fig. 2 networks whose last-layer
+  capacity.csv                 §5.3 [sec:capacity-results], Figs. 4, 5 and 7: raw and quotient
+                               MI, ρ, ρ_func per (width, d, ε)
+  ksg_ties.csv                 Table 7 [tab:ksg_ties], App. G.5: Fig. 2 networks whose last-layer
                                representation has a large group of tied points
   numbers.json                 every number quoted in the text, under a stable key
   SUMMARY.md                   the same numbers, readable, with the selection behind each
@@ -137,7 +140,7 @@ def calibration() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Exp 1 + Exp 10: bias corrections and seed variance
+# Tables 1 and 4, App. G.2 [app:bias_corrections]: bias corrections and seed variance
 # ---------------------------------------------------------------------------
 def bias_corrections() -> pd.DataFrame:
     df = clean_cells()
@@ -196,7 +199,7 @@ def bias_corrections() -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
-# Exp 5: held-out vs in-sample (Composite, WBC)
+# Table 5, App. G.3 [app:heldout]: held-out vs in-sample (Composite, WBC)
 # ---------------------------------------------------------------------------
 def heldout_vs_insample() -> None:
     keys = ["dataset", "arch_str", "layer"]
@@ -223,7 +226,7 @@ def heldout_vs_insample() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Exp 6: baseline hyperparameter sensitivity
+# Table 6, App. G.4 [app:baseline_sensitivity]: baseline hyperparameter sensitivity
 # ---------------------------------------------------------------------------
 def paired_baselines() -> pd.DataFrame:
     """Plug-in routing MI and every baseline on the same network, layer and points
@@ -261,7 +264,7 @@ def baseline_sensitivity() -> None:
     out = pd.DataFrame(rows)
     write(out, "baseline_sensitivity")
 
-    # The rebuttal's grid: binning/k-means Miller–Madow corrected, KSG clipped.
+    # The grid of Table 6: binning/k-means Miller–Madow corrected, KSG clipped.
     main = out[out["estimator"].isin(["miller_madow", "ksg (clipped at 0)"])]
     for group in ("composite+wbc", "mnist"):
         g = main[main["group"] == group]
@@ -278,7 +281,7 @@ def baseline_sensitivity() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Exp 7: occupancy
+# Tables 2 and 3, App. G.1 [app:occupancy]: occupancy
 # ---------------------------------------------------------------------------
 def occupancy(cells: pd.DataFrame) -> None:
     keys = ["dataset", "arch_str", "target_dim", "layer"]
@@ -300,7 +303,7 @@ def occupancy(cells: pd.DataFrame) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Exp 2: label permutation
+# Table 8, App. G.6 [app:label_permutation]: label permutation
 # ---------------------------------------------------------------------------
 def label_permutation() -> None:
     cols = ["N", "H_Y_bits", "accuracy", "rho", "plug_in_bits", "miller_madow_bits",
@@ -340,7 +343,7 @@ def label_permutation() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Exp 4: functional-quotient ordering sensitivity
+# Table 9, App. G.7 [app:ordering]: functional-quotient ordering sensitivity
 # ---------------------------------------------------------------------------
 def ordering() -> None:
     df = pd.concat([pd.read_csv(RESULTS / f"ordering_{s}{SUFFIX}")
@@ -383,7 +386,7 @@ def ordering() -> None:
 
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
-# Study 2 and Figs. [fig:mnist-capacity], [fig:rho-func-layerwise]: the ε window
+# §5.3 and Figs. 4, 5, 7 [fig:mnist-capacity, fig:mnist-rho-eps, fig:rho-func-layerwise]: the ε window
 # ---------------------------------------------------------------------------
 def capacity() -> None:
     df = deepest(routing("mnist_capacity"))
@@ -421,7 +424,7 @@ def capacity() -> None:
     win = agg.pivot_table(index=["width", "target_dim"], columns="epsilon", values="func_mean")
     numbers["capacity.window.max_abs_diff_eps0.3_eps0.5"] = float((win[0.3] - win[0.5]).abs().max())
 
-    # Per-network ρ_func curves over depth (the networks of [fig:rho-func-layerwise])
+    # Per-network ρ_func curves over depth (the networks of Fig. 7 [fig:rho-func-layerwise])
     five = ["[5, 5, 5, 5, 5]", "[9, 9, 9, 9, 9]", "[25, 25, 25, 25, 25]"]
     frames = [routing(s) for s in ("composite_label_noise", "wbc_label_noise")]
     frames = [f[(f["noise_level"] == 0.0) & f["arch_str"].isin(five)] for f in frames]
@@ -438,7 +441,7 @@ def capacity() -> None:
 
 
 # ---------------------------------------------------------------------------
-# App. [app:ksg_ties]: KSG on networks with tied representations
+# Table 7, App. G.5 [app:ksg_ties]: KSG on networks with tied representations
 # ---------------------------------------------------------------------------
 def ksg_ties() -> None:
     import plot_calibration_scatter as fig2
@@ -521,18 +524,18 @@ def summary_markdown() -> str:
     sections = {
         "fig2": "Fig. 2 calibration (plug-in routing MI vs baseline; same network, layer and points)",
         "hy": "Label entropy H(Y) in bits (held-out points; insample = all points)",
-        "mm": "Miller–Madow correction and seed variance (Exp 1; `bias_corrections_by_*.csv`)",
-        "beyond_mm": "Other bias corrections at ρ > 0.9 (Exp 10; gap to H(Y) of the corrected value)",
-        "heldout": "Held-out vs in-sample (Exp 5; `heldout_vs_insample.csv`)",
-        "wbc_rho": "WBC ρ at the deepest layer (Exp 5)",
-        "sensitivity": "Baseline hyperparameter sensitivity (Exp 6; MM-corrected binning/k-means, KSG; `baseline_sensitivity.csv`)",
-        "occupancy": "Occupancy, deepest layer (Exp 7; `occupancy.csv`)",
-        "permutation": f"Label permutation (Exp 2; deepest layer, quotient at ε = {EPS_QUOTIENT}; `label_permutation.csv`)",
-        "capacity": "Study 2: MNIST capacity sweep, last layer (`capacity.csv`; raw = ε 0, func = plug-in quotient)",
-        "rho_func_layerwise": "Per-network ρ_func over depth (networks of [fig:rho-func-layerwise], ε > 0)",
-        "ksg_ties": f"KSG on tied representations (App. [app:ksg_ties]; tied = ≥ {TIE_FRAC:.0%} of the points "
+        "mm": "Miller–Madow correction and seed variance (App. G.2, Tables 1 and 4; `bias_corrections_by_*.csv`)",
+        "beyond_mm": "Other bias corrections at ρ > 0.9 (App. G.2; gap to H(Y) of the corrected value)",
+        "heldout": "Held-out vs in-sample (App. G.3, Table 5; `heldout_vs_insample.csv`)",
+        "wbc_rho": "WBC ρ at the deepest layer (App. G.3)",
+        "sensitivity": "Baseline hyperparameter sensitivity (App. G.4, Table 6; MM-corrected binning/k-means, KSG; `baseline_sensitivity.csv`)",
+        "occupancy": "Occupancy, deepest layer (App. G.1, Tables 2 and 3; `occupancy.csv`)",
+        "permutation": f"Label permutation (App. G.6, Table 8; deepest layer, quotient at ε = {EPS_QUOTIENT}; `label_permutation.csv`)",
+        "capacity": "§5.3: MNIST capacity sweep, last layer (`capacity.csv`; raw = ε 0, func = plug-in quotient)",
+        "rho_func_layerwise": "Per-network ρ_func over depth (networks of Fig. 7, ε > 0)",
+        "ksg_ties": f"KSG on tied representations (App. G.5, Table 7; tied = ≥ {TIE_FRAC:.0%} of the points "
                     f"share one last-layer T; pure = majority class ≥ {PURE_FRAC:.0%}; `ksg_ties.csv`)",
-        "ordering": f"Quotient ordering sensitivity (Exp 4; first-encounter order + random orders; `ordering_by_*.csv`)",
+        "ordering": f"Quotient ordering sensitivity (App. G.7, Table 9; first-encounter order + random orders; `ordering_by_*.csv`)",
     }
     for prefix, title in sections.items():
         lines += [f"## {title}", ""]

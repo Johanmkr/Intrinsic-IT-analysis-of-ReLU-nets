@@ -1,5 +1,7 @@
 """Calibration scatter: each baseline (x) vs plug-in routing MI (y).
 
+Fig. 2 [fig:calibration-scatter] (§5.1); routing MI is Eq. 4 [eq:plugin].
+
 For every (dataset, architecture, seed) at last epoch / deepest layer,
 scatter plug-in routing MI against each baseline. Diagonal y=x and Pearson r
 show agreement across all conditions.

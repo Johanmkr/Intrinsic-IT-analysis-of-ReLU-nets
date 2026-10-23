@@ -1,19 +1,20 @@
 """Step 4: diagnostics that need the regions themselves, at the last epoch.
 
 region sizes   For every network (all sweeps), every step-2 protocol and every
-               hidden layer: how many regions hold 1, 2, 3, ... points.
+               hidden layer: how many regions hold 1, 2, 3, ... points
+               (App. G.1 [app:occupancy]).
                → results/region_sizes_<sweep>.csv.gz  (columns ..., region_size, num_regions)
 ordering       The functional quotient visits regions in first-encounter order
                (order 0). For every clean network, on the held-out points, every
                hidden layer and ε ∈ ORDER_EPSILONS, the quotient is recomputed
                under N_ORDERS random visiting orders (order k uses random seed k)
-               and scored with every estimator.
+               and scored with every estimator (App. G.7 [app:ordering]).
                → results/ordering_<sweep>.csv.gz
 ties           For every clean network, on the held-out points, every hidden
                layer: the largest group of points with identical pre-activations
                T (the representation the baselines see), its majority-class count,
                and whether every point in it passed an earlier layer in which all
-               units are inactive (App. [app:ksg_ties]).
+               units are inactive (App. G.5 [app:ksg_ties]).
                → results/ties_<sweep>.csv.gz
 
 One CSV per (network, protocol, kind) next to the HDF5; ``--aggregate``

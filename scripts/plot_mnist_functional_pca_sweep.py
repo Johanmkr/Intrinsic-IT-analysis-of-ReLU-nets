@@ -1,5 +1,8 @@
 """MI vs epsilon at last epoch sweeping PCA dimension, per architecture.
 
+``--type rho`` gives Fig. 5 [fig:mnist-rho-eps] (§5.3): ρ_func, Eq. 9
+[eq:rho_func], against ε. The other types are not in the paper.
+
 The key story: raw plug-in MI (epsilon=0) saturates toward H(Y) as PCA dim
 grows; functional equivalence (func) pulls it back down as epsilon increases.
 

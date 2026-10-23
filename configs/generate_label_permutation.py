@@ -1,4 +1,5 @@
-"""Generate YAML configs for the label-permutation (memorization) control.
+"""Generate YAML configs for the label-permutation (memorization) control (App. G.6
+[app:label_permutation], Table 8 [tab:label_permutation]).
 
 The training labels are randomly permuted (``permute_labels: true``, see
 ``src_experiment/dataset.py:permute_labels``), so they keep their marginal

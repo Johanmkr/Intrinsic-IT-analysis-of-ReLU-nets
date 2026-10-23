@@ -1,4 +1,4 @@
-"""Per-layer profile at the last epoch (Fig. [fig:layer-profile]).
+"""Per-layer profile at the last epoch (Fig. 3 [fig:layer-profile], §5.2).
 
 For each dataset we plot bits as a function of layer index for the plug-in
 routing MI and the three baselines (binning K=8 and k-means K=|Y| with

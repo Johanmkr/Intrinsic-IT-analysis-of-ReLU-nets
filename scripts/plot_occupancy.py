@@ -1,10 +1,10 @@
-"""Region-size distribution at the deepest layer (App. G.1, occupancy).
+"""Region-size distribution at the deepest layer (App. G.1 [app:occupancy], Fig. 8 [fig:occupancy]).
 
 For each architecture, the fraction of points that lie in a region holding at
 most n points, as a function of the region size n (log axis). The curve starts
 at the fraction of points alone in their region (the singleton-sample fraction
-of tables/occupancy.tex) and reaches 1 at the largest region. Curves that rise
-early belong to saturated partitions (occupancy rho near 1).
+of Table 2 [tab:occupancy], latex/tables/occupancy.tex) and reaches 1 at the largest region. Curves that rise
+early belong to saturated partitions (occupancy rho, Eq. 6 [eq:rho], near 1).
 
 Held-out points, clean labels, last epoch, deepest layer; the five seeds are
 pooled (every seed sees the same N points, so pooling equals averaging the

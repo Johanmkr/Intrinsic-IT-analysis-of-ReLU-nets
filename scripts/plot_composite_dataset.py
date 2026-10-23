@@ -1,4 +1,4 @@
-"""The 2D Composite dataset as the networks see it (App. B, Fig. [fig:composite_dataset]).
+"""The 2D Composite dataset as the networks see it (App. B, Fig. 6 [fig:composite_dataset]).
 
 Loads the training split through ``get_new_data`` (same generation, split and
 MinMax scaling to [-1, 1] as in training) and scatters it by class.

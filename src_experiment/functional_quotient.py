@@ -1,12 +1,15 @@
 """
-Recipes 2 & 3:
+Functional quotient (§3.6 [subsec:functional_quotient], App. F [app:func_algorithm]):
 
-- Recipe 2: functional-equivalence quotient via the active subnetwork matrix
-  $\\tilde A^l_\\omega$ and ε-tolerance clustering.
-- Recipe 3: quotient MI estimator $\\tilde I_{\\mathrm{func}}$ -- Recipe 1 applied
-  to merged contingency rows where regions sharing a quotient class are pooled.
+- functional-equivalence quotient $\\Omega_{\\mathcal D, \\mathrm{func}}$ via the
+  active subnetwork matrix $\\tilde A^l_\\omega$ and ε-tolerance clustering,
+  Eq. 7 [eq:func_equiv] and Alg. 1 [alg:func_cluster];
+- quotient MI estimator $\\hat I_{\\mathrm{func}}$ (Eq. 8 [eq:func_chain]): the
+  routing estimator, Eq. 4 [eq:plugin], applied to merged contingency rows
+  where regions sharing a quotient class are pooled;
+- compression ratio $\\rho_{\\mathrm{func}}$, Eq. 9 [eq:rho_func].
 
-Reuses :mod:`src_experiment.routing_estimator` (Recipe 1).
+Reuses :mod:`src_experiment.routing_estimator`.
 """
 
 from __future__ import annotations
@@ -44,7 +47,8 @@ def compute_active_subnetwork(
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Active subnetwork matrix and bias for one region at depth ``layer``.
 
-    Recursion: $\\tilde A_i = W^i[S_i, S_{i-1}]\\,\\tilde A_{i-1}$,
+    $\\tilde A^l_\\omega = \\prod_{i=l}^{1} W^i[S^\\omega_i, S^\\omega_{i-1}]$ of
+    §3.6 (line 4 of Alg. 1 [alg:func_cluster]). Recursion: $\\tilde A_i = W^i[S_i, S_{i-1}]\\,\\tilde A_{i-1}$,
     $\\tilde c_i = W^i[S_i, S_{i-1}]\\,\\tilde c_{i-1} + b^i[S_i]$,
     initialized $\\tilde A_0 = I_{n_0}$, $\\tilde c_0 = 0$.
 
@@ -133,7 +137,7 @@ def _build_active_data(
 
 
 def _relative_frob(A1: np.ndarray, A2: np.ndarray) -> float:
-    """Relative Frobenius distance between two matrices."""
+    """Relative Frobenius distance between two matrices, the left side of Eq. 7 [eq:func_equiv]."""
     denom = 0.5 * (np.linalg.norm(A1, "fro") + np.linalg.norm(A2, "fro"))
     if denom < 1e-12:
         return 0.0
@@ -142,7 +146,7 @@ def _relative_frob(A1: np.ndarray, A2: np.ndarray) -> float:
 
 def are_functionally_equivalent(A1: np.ndarray, A2: np.ndarray, eps: float) -> bool:
     """True if A1 and A2 implement the same linear transformation up to relative
-    tolerance eps.  Bias is excluded by design."""
+    tolerance eps (Eq. 7 [eq:func_equiv]).  Bias is excluded by design."""
     return _relative_frob(A1, A2) <= eps
 
 
@@ -150,8 +154,10 @@ def cluster_functional(
     active_data: Dict[bytes, _RegionActive],
     epsilon: float,
 ) -> Tuple[Dict[bytes, int], int]:
-    """ε-tolerance functional-equivalence clustering.
+    """ε-tolerance functional-equivalence clustering, Alg. 1 [alg:func_cluster].
 
+    Regions are visited in first-encounter order (App. F; App. G.7
+    [app:ordering] measures the effect of the order).
     Buckets first by ``S_l`` (matching active output set is necessary), then
     naive O(k²) relative-Frobenius comparison of tilde_A within each bucket.
     Bias tilde_c is excluded from the criterion (scale-invariant definition).
@@ -212,8 +218,10 @@ class FunctionalQuotientEstimator:
 
     Composes :class:`RoutingEstimator` for HDF5 I/O. One output row per
     (epoch, hidden layer, ε) with, for every estimator in
-    :data:`src_experiment.estimators.ESTIMATORS`, the raw ``<name>_bits`` and
-    the quotient ``<name>_func_bits``.
+    :data:`src_experiment.estimators.ESTIMATORS`, the raw ``<name>_bits``
+    (Eq. 4 [eq:plugin]) and the quotient ``<name>_func_bits`` (Eq. 8
+    [eq:func_chain]), plus ``rho`` (Eq. 6 [eq:rho]) and ``rho_func`` (Eq. 9
+    [eq:rho_func]).
     """
 
     def __init__(self, h5_path: PathLike):

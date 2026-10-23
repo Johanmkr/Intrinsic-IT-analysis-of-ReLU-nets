@@ -1,6 +1,6 @@
 """Generate per-(architecture, seed) YAML configs for the WBC label-noise sweep.
 
-Same architecture grid as composite; dataset is WBC (Wisconsin Breast Cancer, N=569).
+Calibration study, §4.1 [sec:calibration-setup]. Same architecture grid as composite; dataset is WBC (Wisconsin Breast Cancer, N=569).
 
 Usage:
     python configs/generate_wbc.py

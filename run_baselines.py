@@ -1,5 +1,9 @@
 """Step 3: MI baselines on the hidden-layer pre-activations T of every clean network.
 
+The baselines of §4.1 [sec:calibration-setup] and App. H [app:implementation],
+used in Fig. 2 [fig:calibration-scatter], Fig. 3 [fig:layer-profile] and
+Table 6 [tab:baseline_sensitivity].
+
 For each clean network (Composite, WBC, MNIST) and each protocol of step 2 —
 so the baselines see exactly the points the routing estimate sees — and every
 hidden layer at the last epoch, computes the grid

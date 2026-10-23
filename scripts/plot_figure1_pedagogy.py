@@ -1,5 +1,5 @@
 """
-Pedagogical Figure 1: how ReLU networks partition input space and how
+Pedagogical Figure 1 [fig:pedagogical_figure]: how ReLU networks partition input space and how
 activation patterns uniquely identify each linear region.
 
 Trains a small 2→4→4→2 network on the moons dataset, then visualises:

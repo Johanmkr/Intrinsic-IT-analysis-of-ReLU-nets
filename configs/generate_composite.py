@@ -1,6 +1,6 @@
 """Generate per-(architecture, seed) YAML configs for the composite label-noise sweep.
 
-Architectures used in the paper:
+Calibration study, §4.1 [sec:calibration-setup]. Architectures used in the paper:
   - [5,5,5] and [5,5,5,5,5]           — calibration scatter (3-layer and 5-layer narrow)
   - [9,9,9] and [9,9,9,9,9]           — calibration scatter (3-layer and 5-layer medium)
   - [25,25,25] and [25,25,25,25,25]   — calibration scatter (3-layer and 5-layer wide)

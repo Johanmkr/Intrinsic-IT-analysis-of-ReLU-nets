@@ -1,6 +1,6 @@
 """
-Recipe 1: routing-information estimator $\\tilde I(Y;\\Omega_{\\mathcal D})$
-on a CPWL ReLU network.
+Plug-in routing estimator $\\hat I(Y;\\Omega_{\\mathcal D})$ on a CPWL ReLU
+network: Eq. 4 [eq:plugin] (§3.5), with occupancy $\\rho$, Eq. 6 [eq:rho].
 
 Independent of the Julia tree: weights are loaded from HDF5, but cumulative
 activation patterns are computed from a fresh forward pass on whatever probe
@@ -32,6 +32,8 @@ def forward_activation_patterns(
 ) -> List[np.ndarray]:
     """Run a ReLU forward pass and return per-hidden-layer activation patterns.
 
+    The patterns $\\pi^l(x)$ of §3.1 [subsec:prelim]; the data-supported
+    regions $\\Omega^l_{\\mathcal D}$ are the distinct cumulative patterns.
     Strict `z > 0` matches the mathematical definition (dead neurons → 0).
 
     Parameters
@@ -95,7 +97,7 @@ class RoutingResult:
     plug_in_bits: float
     miller_madow_bits: float
     H_Y_bits: float
-    rho: float
+    rho: float  # occupancy |Ω_D| / N, Eq. 6 [eq:rho]
 
 
 def routing_information(
@@ -104,6 +106,10 @@ def routing_information(
     num_classes: Optional[int] = None,
 ) -> Tuple[float, float, int, float]:
     """Plug-in MI and Miller-Madow corrected MI between region IDs and labels.
+
+    Plug-in: Eq. 4 [eq:plugin]. Miller–Madow subtracts
+    $(|\\Omega_{\\mathcal D}| - 1)(|\\mathcal Y| - 1) / (2N \\ln 2)$ (App. G.2
+    [app:bias_corrections]).
 
     Returns ``(plug_in_bits, miller_madow_bits, num_regions, H_Y_bits)``.
     """
@@ -153,7 +159,7 @@ def routing_information(
 # ---------------------------------------------------------------------------
 class RoutingEstimator:
     """Loads a model checkpoint from the project's HDF5 layout and computes
-    Recipe 1 across hidden layers.
+    the routing estimator (Eq. 4 [eq:plugin]) across hidden layers.
 
     HDF5 layout (training output):
         metadata.attrs['architecture']          # list of hidden widths

@@ -1,6 +1,6 @@
 """Tests for src_experiment/estimators.py.
 
-The comparison with infomeasure 0.6.2 (the package rebuttal Exp 10 used) runs
+The comparison with infomeasure 0.6.2 (App. G.2, App. H) runs
 only when it is installed: ``uv sync --group rebuttal``.
 """
 import sys

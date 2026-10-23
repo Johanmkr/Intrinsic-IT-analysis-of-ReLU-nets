@@ -1,3 +1,8 @@
+"""Datasets of the paper: Composite (App. B [app:composite_dataset]), WBC (App. C
+[app:wbc_dataset]) and MNIST FC (App. D [app:mnist_fc_dataset]), with the
+train/test split and preprocessing of App. B.4 [app:train_test].
+"""
+
 import os
 from pathlib import Path
 
@@ -43,7 +48,7 @@ def inject_label_noise_vectorized(y: np.ndarray, noise_ratio: float, n_classes: 
 
 
 def permute_labels(y: np.ndarray, seed: int) -> np.ndarray:
-    """Memorization control: randomly permute the training labels with ``seed``.
+    """Memorization control (App. G.6 [app:label_permutation]): randomly permute the training labels with ``seed``.
 
     The label marginal is kept but the labels become independent of the inputs.
     Deterministic, so step 2 can rebuild exactly the labels a network trained on.
@@ -140,7 +145,7 @@ def _load_uci(id: int, target_col: str = None, target_val: str = None, map_func:
     return X.to_numpy(dtype=np.float32), y.to_numpy(dtype=np.int64)
 
 def _make_composite_data(n_samples: int, seed: int, noise=None) -> Tuple[np.ndarray, np.ndarray]:
-    """Generates the custom moons/circles/blobs composite dataset."""
+    """Generates the custom moons/circles/blobs composite dataset (App. B, Fig. 6 [fig:composite_dataset])."""
     # Proportional splits based on the requested n_samples
     n_moons = int(n_samples * 0.4) 
     n_circles = int(n_samples * 0.4) 

@@ -1,5 +1,7 @@
 """ρ_func as a function of layer depth across all three datasets.
 
+Fig. 7 [fig:rho-func-layerwise] (App. F [app:func_layerwise]); ρ_func is Eq. 9 [eq:rho_func].
+
 ρ_func = |Ω_{D,func}| / |Ω_D| ∈ (0,1] measures how much combinatorial
 capacity is genuinely used vs. collapsed by functional equivalence.  Values
 near 1 mean almost every activation pattern implements a distinct affine map;

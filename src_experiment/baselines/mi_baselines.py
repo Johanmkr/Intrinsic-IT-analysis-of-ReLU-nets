@@ -1,5 +1,9 @@
 """MI baselines on continuous hidden-layer activations T (step 3).
 
+The baselines of §4.1 [sec:calibration-setup], described in App. H
+[app:implementation]; their settings are compared in App. G.4
+[app:baseline_sensitivity].
+
 - :func:`quantize_per_layer` — Tishby/Saxe-style per-neuron uniform binning;
   the resulting cells (and k-means clusters, see run_baselines.py) are scored
   with the discrete estimators of :mod:`src_experiment.estimators`.

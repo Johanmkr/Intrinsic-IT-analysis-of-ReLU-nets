@@ -23,7 +23,7 @@ Results from commit `c2417a82f1da86e8bbf45ccef3436cc921507b58`. Unless stated ot
 - `hy.composite.insample` = 2.639
 - `hy.wbc.insample` = 0.9526
 
-## Miller–Madow correction and seed variance (Exp 1; `bias_corrections_by_*.csv`)
+## Miller–Madow correction and seed variance (App. G.2, Tables 1 and 4; `bias_corrections_by_*.csv`)
 
 - `mm.n_cells` = 138
 - `mm.max_correction` = 6.488
@@ -37,7 +37,7 @@ Results from commit `c2417a82f1da86e8bbf45ccef3436cc921507b58`. Unless stated ot
 - `mm.rho>0.3.plug_in_std` = 0.02463
 - `mm.rho>0.3.mm_std` = 0.09168
 
-## Other bias corrections at ρ > 0.9 (Exp 10; gap to H(Y) of the corrected value)
+## Other bias corrections at ρ > 0.9 (App. G.2; gap to H(Y) of the corrected value)
 
 - `beyond_mm.rho>0.9.n_cells` = 19
 - `beyond_mm.rho>0.9.gap_to_H_Y.plug_in` = 0.003809
@@ -55,7 +55,7 @@ Results from commit `c2417a82f1da86e8bbf45ccef3436cc921507b58`. Unless stated ot
 - `beyond_mm.ansb_nan_cells` = 0
 - `beyond_mm.min_N_over_K` = 1.001
 
-## Held-out vs in-sample (Exp 5; `heldout_vs_insample.csv`)
+## Held-out vs in-sample (App. G.3, Table 5; `heldout_vs_insample.csv`)
 
 - `heldout.composite.N_heldout` = 2000
 - `heldout.composite.N_insample` = 10000
@@ -68,14 +68,14 @@ Results from commit `c2417a82f1da86e8bbf45ccef3436cc921507b58`. Unless stated ot
 - `heldout.wbc.max_abs_delta_plug_in.all_layers` = 0.07499
 - `heldout.wbc.max_abs_delta_mm.deepest` = 0.1523
 
-## WBC ρ at the deepest layer (Exp 5)
+## WBC ρ at the deepest layer (App. G.3)
 
 - `wbc_rho.[25, 25, 25].insample` = 0.7413
 - `wbc_rho.[25, 25, 25].heldout` = 0.9
 - `wbc_rho.[25, 25, 25, 25, 25].insample` = 0.8935
 - `wbc_rho.[25, 25, 25, 25, 25].heldout` = 0.9614
 
-## Baseline hyperparameter sensitivity (Exp 6; MM-corrected binning/k-means, KSG; `baseline_sensitivity.csv`)
+## Baseline hyperparameter sensitivity (App. G.4, Table 6; MM-corrected binning/k-means, KSG; `baseline_sensitivity.csv`)
 
 - `sensitivity.composite+wbc.n` = 60
 - `sensitivity.composite+wbc.r_min` = 0.6553
@@ -116,7 +116,7 @@ Results from commit `c2417a82f1da86e8bbf45ccef3436cc921507b58`. Unless stated ot
 - `sensitivity.mnist.negative_r` = binning16 (r=-0.570), binning30 (r=-0.888)
 - `sensitivity.mnist.best_binning` = binning2
 
-## Occupancy, deepest layer (Exp 7; `occupancy.csv`)
+## Occupancy, deepest layer (App. G.1, Tables 2 and 3; `occupancy.csv`)
 
 - `occupancy.composite.configs` = 6
 - `occupancy.composite.rho>0.3` = 2
@@ -128,7 +128,7 @@ Results from commit `c2417a82f1da86e8bbf45ccef3436cc921507b58`. Unless stated ot
 - `occupancy.wbc.rho>0.3` = 4
 - `occupancy.wbc.rho_max` = 0.9614
 
-## Label permutation (Exp 2; deepest layer, quotient at ε = 0.3; `label_permutation.csv`)
+## Label permutation (App. G.6, Table 8; deepest layer, quotient at ε = 0.3; `label_permutation.csv`)
 
 - `permutation.composite.[25, 25, 25].clean.raw` = 2.535
 - `permutation.composite.[25, 25, 25].clean.quotient` = 2.362
@@ -167,7 +167,7 @@ Results from commit `c2417a82f1da86e8bbf45ccef3436cc921507b58`. Unless stated ot
 - `permutation.wbc.[25, 25, 25].permuted.train_label_accuracy` = 0.6558
 - `permutation.wbc.[5, 5, 5].permuted.train_label_accuracy` = 0.6277
 
-## Study 2: MNIST capacity sweep, last layer (`capacity.csv`; raw = ε 0, func = plug-in quotient)
+## §5.3: MNIST capacity sweep, last layer (`capacity.csv`; raw = ε 0, func = plug-in quotient)
 
 - `capacity.H_Y` = 3.319
 - `capacity.w7.d<=5.raw_max` = 2.134
@@ -202,7 +202,7 @@ Results from commit `c2417a82f1da86e8bbf45ccef3436cc921507b58`. Unless stated ot
 - `capacity.eps2.d2.func_over_raw_max` = 0.8275
 - `capacity.window.max_abs_diff_eps0.3_eps0.5` = 0.3042
 
-## Per-network ρ_func over depth (networks of [fig:rho-func-layerwise], ε > 0)
+## Per-network ρ_func over depth (networks of Fig. 7, ε > 0)
 
 - `rho_func_layerwise.n_networks` = 40
 - `rho_func_layerwise.n_curves` = 560
@@ -210,7 +210,7 @@ Results from commit `c2417a82f1da86e8bbf45ccef3436cc921507b58`. Unless stated ot
 - `rho_func_layerwise.max_rise` = 0.2159
 - `rho_func_layerwise.layer1_all_one` = True
 
-## KSG on tied representations (App. [app:ksg_ties]; tied = ≥ 20% of the points share one last-layer T; pure = majority class ≥ 95%; `ksg_ties.csv`)
+## KSG on tied representations (App. G.5, Table 7; tied = ≥ 20% of the points share one last-layer T; pure = majority class ≥ 95%; `ksg_ties.csv`)
 
 - `ksg_ties.n` = 5
 - `ksg_ties.datasets` = wbc
@@ -266,7 +266,7 @@ Results from commit `c2417a82f1da86e8bbf45ccef3436cc921507b58`. Unless stated ot
 - `ksg_ties.fig3.wbc.routing.without.min` = 0.6753
 - `ksg_ties.fig3.wbc.routing.without.max` = 0.9047
 
-## Quotient ordering sensitivity (Exp 4; first-encounter order + random orders; `ordering_by_*.csv`)
+## Quotient ordering sensitivity (App. G.7, Table 9; first-encounter order + random orders; `ordering_by_*.csv`)
 
 - `ordering.eps0.3.all_layers.n_cells` = 690
 - `ordering.eps0.3.all_layers.regions_min` = 6

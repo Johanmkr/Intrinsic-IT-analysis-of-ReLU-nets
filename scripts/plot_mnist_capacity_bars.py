@@ -1,5 +1,8 @@
 """Grouped bar chart: plug-in I_raw and I_func vs PCA dimension (MNIST capacity).
 
+Fig. 4 [fig:mnist-capacity] (§5.3). I_raw is Eq. 4 [eq:plugin], I_func the
+quotient estimate of Eq. 8 [eq:func_chain].
+
 For each PCA dim, one bar group containing:
   - I_raw  (plug_in_bits,      epsilon-independent)
   - I_func at several key epsilons (plug_in_func_bits)

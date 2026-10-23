@@ -1,6 +1,8 @@
 """Generate per-(architecture, PCA-dim, seed) YAML configs for the MNIST capacity sweep.
 
-Two architecture groups serve different figures:
+Group A belongs to the calibration study (§4.1 [sec:calibration-setup]), group B
+to the capacity study (§4.2 [sec:capacity-setup]). Two architecture groups serve
+different figures:
 
   Group A — narrow 3-layer nets (calibration scatter + layer profile):
     archs: [3,3,3], [5,5,5]
