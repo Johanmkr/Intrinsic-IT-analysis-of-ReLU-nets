@@ -31,6 +31,11 @@ Everything runs from this directory with one command per step.
   (`./run.sh setup` does both up front).
 - Or only Docker: the image (see [Docker](#c-docker)) contains the environment,
   both datasets and the stored results, and runs without internet.
+- [`parx`](https://github.com/Johanmkr/parx), a companion package for finding and
+  exploring the polyhedral (linear) regions of ReLU networks, is installed by `uv sync`.
+  The pipeline computes the regions itself from activation patterns; `parx` checks
+  them independently in `tests/test_parx_partitions.py` (its Julia-backed methods are
+  skipped when Julia is absent).
 - All estimators are implemented in this repository. `infomeasure` (AGPL-3.0, used for
   the rebuttal) is only needed to run the cross-check in `tests/test_estimators.py`:
   `uv sync --group rebuttal`; without it that comparison is skipped.
@@ -454,7 +459,8 @@ intrinsic_IT_analysis_of_relu_nets/
 - **No Julia required.** The routing estimator computes activation patterns
   directly from network weights via a standard ReLU forward pass; no polytope
   enumeration is needed. (`tests/test_parx_partitions.py` cross-checks the
-  regions against the `parx` partition package.)
+  regions against [`parx`](https://github.com/Johanmkr/parx), a package for finding
+  and exploring polyhedral regions.)
 
 - **HDF5 as checkpoint format.** The training loop saves weights, curves and
   the test split to HDF5. Every later step reads only these files (plus the
