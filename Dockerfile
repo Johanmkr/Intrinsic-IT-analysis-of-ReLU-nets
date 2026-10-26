@@ -1,4 +1,4 @@
-# Reproduction image for "Intrinsic Information Theoretic Analysis of ReLU Nets".
+# Reproduction image for "Intrinsic Information-Theoretic Analysis of ReLU Nets".
 #
 # Contains the code, the locked environment (uv.lock), MNIST and WBC, and the
 # stored results, so it runs without internet. See README.md, "Docker".

@@ -1,9 +1,9 @@
 cff-version: 1.2.0
 message: "If you use this code, please cite the paper below."
-title: "Intrinsic Information Theoretic Analysis of ReLU Nets — code"
+title: "Intrinsic Information-Theoretic Analysis of ReLU Nets — code"
 type: software
 license: MIT
-repository-code: "https://github.com/Johanmkr/Intrinsic_IT_analysis_of_ReLU_nets"
+repository-code: "https://github.com/Johanmkr/Intrinsic-IT-analysis-of-ReLU-nets"
 authors:
   - family-names: Mylius-Kroken
     given-names: Johan
@@ -23,7 +23,7 @@ authors:
     affiliation: "UiT The Arctic University of Norway"
 preferred-citation:
   type: conference-paper
-  title: "Intrinsic Information Theoretic Analysis of ReLU Nets"
+  title: "Intrinsic Information-Theoretic Analysis of ReLU Nets"
   authors:
     - family-names: Mylius-Kroken
       given-names: Johan

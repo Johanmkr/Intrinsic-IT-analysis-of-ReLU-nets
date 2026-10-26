@@ -1,4 +1,4 @@
-# Intrinsic Information Theoretic Analysis of ReLU Nets — code
+# Intrinsic Information-Theoretic Analysis of ReLU Nets — code
 
 [![NeurIPS 2026](https://img.shields.io/badge/NeurIPS-2026-8c1b13.svg)](https://openreview.net/forum?id=4dnKZPefBt)
 [![Project page](https://img.shields.io/badge/project-page-0a7bbb.svg)](https://johanmkr.github.io/Intrinsic-IT-analysis-of-ReLU-nets/)
