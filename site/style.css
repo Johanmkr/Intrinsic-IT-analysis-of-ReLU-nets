@@ -90,4 +90,5 @@ footer { color: var(--muted); font-size: 0.9rem; margin-top: 3rem; padding-botto
   body { font-size: 16px; }
   .panels, .panels.wide { grid-template-columns: minmax(0, 1fr); }
   input[type="range"] { width: 110px; }
+  .bibtex pre { padding-top: 2.6rem; }
 }
