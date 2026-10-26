@@ -2,8 +2,8 @@
 
 [![NeurIPS 2026](https://img.shields.io/badge/NeurIPS-2026-8c1b13.svg)](https://openreview.net/forum?id=4dnKZPefBt)
 [![Project page](https://img.shields.io/badge/project-page-0a7bbb.svg)](https://johanmkr.github.io/Intrinsic-IT-analysis-of-ReLU-nets/)
-[![CI](https://github.com/Johanmkr/Intrinsic_IT_analysis_of_ReLU_nets/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Johanmkr/Intrinsic_IT_analysis_of_ReLU_nets/actions/workflows/ci.yml)
-[![Pages](https://github.com/Johanmkr/Intrinsic_IT_analysis_of_ReLU_nets/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/Johanmkr/Intrinsic_IT_analysis_of_ReLU_nets/actions/workflows/pages.yml)
+[![CI](https://github.com/Johanmkr/Intrinsic-IT-analysis-of-ReLU-nets/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Johanmkr/Intrinsic-IT-analysis-of-ReLU-nets/actions/workflows/ci.yml)
+[![Pages](https://github.com/Johanmkr/Intrinsic-IT-analysis-of-ReLU-nets/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/Johanmkr/Intrinsic-IT-analysis-of-ReLU-nets/actions/workflows/pages.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 [![Python 3.13](https://img.shields.io/badge/python-3.13-3776ab.svg?logo=python&logoColor=white)](.python-version)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
