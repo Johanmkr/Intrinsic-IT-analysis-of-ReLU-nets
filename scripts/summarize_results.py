@@ -498,8 +498,9 @@ def ksg_ties() -> None:
     numbers["ksg_ties.fig3.wbc.n_tied"] = len(in_fig3)
     onset = ties[(ties["dataset"] == "wbc") & ties["tie_dead_upstream"] & (ties["tie_size"] > 1)]
     onset = onset[[n in in_fig3 for n in zip(onset["arch_str"], onset["seed"])]].groupby(["arch_str", "seed"])["layer"].min()
-    numbers["ksg_ties.fig3.wbc.onset_layer_min"] = int(onset.min())
-    numbers["ksg_ties.fig3.wbc.onset_layer_max"] = int(onset.max())
+    if len(onset):  # empty on the smoke sweep
+        numbers["ksg_ties.fig3.wbc.onset_layer_min"] = int(onset.min())
+        numbers["ksg_ties.fig3.wbc.onset_layer_max"] = int(onset.max())
     for col, name, frame in (("ksg3_bits", "ksg3", fig3.baselines_for("wbc")), ("plug_in_bits", "routing", fig3.load_ours("wbc"))):
         out = np.array([n in names for n in zip(frame["arch_str"], frame["seed"])])
         for label, sub in (("with", frame), ("without", frame[~out])):
