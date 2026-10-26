@@ -4,9 +4,9 @@
 Output docs/demo/uv.gif
 Source docs/demo/common.tape
 
-Type "git clone https://github.com/Johanmkr/Intrinsic_IT_analysis_of_ReLU_nets.git" Enter
+Type "git clone https://github.com/Johanmkr/Intrinsic-IT-analysis-of-ReLU-nets.git" Enter
 Wait@2m /^\$\s*$/
-Type "cd Intrinsic_IT_analysis_of_ReLU_nets" Enter
+Type "cd Intrinsic-IT-analysis-of-ReLU-nets" Enter
 Sleep 500ms
 
 Type "# environment (uv) + MNIST and WBC" Enter
