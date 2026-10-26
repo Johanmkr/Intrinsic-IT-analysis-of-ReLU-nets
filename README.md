@@ -47,8 +47,8 @@ Everything runs from this directory with one command per step.
 Get the code (all commands below run from the repository root):
 
 ```bash
-git clone https://github.com/Johanmkr/Intrinsic_IT_analysis_of_ReLU_nets.git
-cd Intrinsic_IT_analysis_of_ReLU_nets
+git clone https://github.com/Johanmkr/Intrinsic-IT-analysis-of-ReLU-nets.git
+cd Intrinsic-IT-analysis-of-ReLU-nets
 ```
 
 Then either redraw the figures from the stored results (A) or rerun every
