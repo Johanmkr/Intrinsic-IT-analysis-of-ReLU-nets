@@ -1,6 +1,7 @@
 # Intrinsic Information-Theoretic Analysis of ReLU Nets — code
 
 [![NeurIPS 2026](https://img.shields.io/badge/NeurIPS-2026-8c1b13.svg)](https://openreview.net/forum?id=4dnKZPefBt)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23668498.svg)](https://doi.org/10.5281/zenodo.23668498)
 [![Project page](https://img.shields.io/badge/project-page-0a7bbb.svg)](https://johanmkr.github.io/Intrinsic-IT-analysis-of-ReLU-nets/)
 [![CI](https://github.com/Johanmkr/Intrinsic-IT-analysis-of-ReLU-nets/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Johanmkr/Intrinsic-IT-analysis-of-ReLU-nets/actions/workflows/ci.yml)
 [![Pages](https://github.com/Johanmkr/Intrinsic-IT-analysis-of-ReLU-nets/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/Johanmkr/Intrinsic-IT-analysis-of-ReLU-nets/actions/workflows/pages.yml)

@@ -3,6 +3,9 @@ message: "If you use this code, please cite the paper below."
 title: "Intrinsic Information-Theoretic Analysis of ReLU Nets — code"
 type: software
 license: MIT
+version: "1.0.0"
+date-released: "2026-10-26"
+doi: "10.5281/zenodo.23668498"
 repository-code: "https://github.com/Johanmkr/Intrinsic-IT-analysis-of-ReLU-nets"
 authors:
   - family-names: Mylius-Kroken
