@@ -22,11 +22,10 @@
   </p>
   <p class="affiliations"><sup>1</sup>UiT The Arctic University of Norway &nbsp; <sup>2</sup>University of Oslo</p>
   <nav class="links" aria-label="Paper links">
-    <!-- web-content: fill in the paper PDF and arXiv links -->
-    <a class="button disabled" aria-disabled="true">Paper (PDF)</a>
+    <a class="button" href="https://openreview.net/pdf?id=4dnKZPefBt">Paper (PDF)</a>
     <a class="button disabled" aria-disabled="true">arXiv</a>
     <a class="button" href="https://openreview.net/forum?id=4dnKZPefBt">OpenReview</a>
-    <a class="button" href="https://github.com/Johanmkr/Intrinsic_IT_analysis_of_ReLU_nets">Code</a>
+    <a class="button" href="https://github.com/Johanmkr/Intrinsic-IT-analysis-of-ReLU-nets">Code</a>
   </nav>
 </header>
 
@@ -40,8 +39,23 @@
 
   <section>
     <h2>Abstract</h2>
-    <!-- web-content: replace with the camera-ready abstract -->
-    <p class="placeholder">The camera-ready abstract will appear here.</p>
+    <p>Mutual information (MI) is fundamental to representation-learning analysis in deep networks, but in
+      high dimensions MI estimators depend on hyperparameters whose bias often dominates the signal. We show
+      that continuous piecewise-linear (CPWL) networks, including ReLU networks, admit an intrinsic
+      information-theoretic analysis that avoids this pitfall: their inherent partition of the input space
+      into convex linear regions assigns to every input a discrete region label <i>Π</i> alongside the
+      continuous representation <i>T</i> and label <i>Y</i>. We introduce a decomposition of the mutual
+      information <i>I</i>(<i>Y</i>; <i>T</i>) into interpretable geometric terms. We show that the dominant
+      term, the <em>routing information</em> <i>I</i>(<i>Y</i>; <i>Π</i>), admits an estimable plug-in
+      estimator, that in the well-sampled regime, approximates a population lower bound on the joint
+      information <i>I</i>(<i>Y</i>; <i>Π</i>, <i>T</i>). When the partition saturates, a
+      functional-equivalence quotient collapses regions implementing the same linear operator and restores
+      informativeness; this extension has a single bounded, dimensionless parameter, which is reported
+      through the quotient's compression ratio. The routing estimator agrees strongly with three established
+      MI baselines applied to the same networks and data. The functional quotient recovers informative
+      estimates in the regime bordering the well-sampled and under-sampled regime. We provide a framework
+      for analysing the internal information geometry of CPWL networks, grounded in their inherent
+      piecewise-linear structure rather than in external discretisation.</p>
   </section>
 
   <section class="demo" data-demo="regions" id="regions">
@@ -126,7 +140,7 @@
     <div class="bibtex">
       <button class="copy" data-target="bibtex">Copy</button>
 <pre id="bibtex">@inproceedings{myliuskroken2026intrinsic,
-  title     = {Intrinsic Information Theoretic Analysis of {ReLU} Nets},
+  title     = {Intrinsic Information-Theoretic Analysis of {ReLU} Nets},
   author    = {Mylius-Kroken, Johan and Wetzer, Elisabeth and Ramezani-Kebrya, Ali
                and Jenssen, Robert and Wickstr{\o}m, Kristoffer},
   booktitle = {Advances in Neural Information Processing Systems},
@@ -139,7 +153,7 @@
 <footer>
   <p>The demos run in your browser on the paper's trained networks and reproduce the pipeline's
     estimates exactly. Code, results and reproduction instructions:
-    <a href="https://github.com/Johanmkr/Intrinsic_IT_analysis_of_ReLU_nets">GitHub</a> · MIT licence.</p>
+    <a href="https://github.com/Johanmkr/Intrinsic-IT-analysis-of-ReLU-nets">GitHub</a> · MIT licence.</p>
 </footer>
 </body>
 </html>
