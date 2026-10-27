@@ -126,6 +126,18 @@ Set `--workers` to the number of cores you give the container: inside a
 container the CPU count often reports the whole host. Everything runs on the
 CPU; the environment uses the CPU-only PyTorch build.
 
+Instead of building, the image of the v1.0.0 release can be pulled from GHCR or
+loaded from the [Zenodo archive](https://doi.org/10.5281/zenodo.23668498)
+(no internet needed afterwards); tag it so the commands above work unchanged:
+
+```bash
+docker pull ghcr.io/johanmkr/intrinsic-it-analysis-of-relu-nets:v1.0.0
+docker tag ghcr.io/johanmkr/intrinsic-it-analysis-of-relu-nets:v1.0.0 intrinsic-it-relu-nets
+# or, from the Zenodo file:
+docker load -i intrinsic-it-analysis-of-relu-nets-v1.0.0-docker.tar.gz
+docker tag ghcr.io/johanmkr/intrinsic-it-analysis-of-relu-nets:v1.0.0 intrinsic-it-relu-nets
+```
+
 ### Notes
 
 `./run.sh step1` … `./run.sh step5` run single steps; `all` and steps 1–4 accept
