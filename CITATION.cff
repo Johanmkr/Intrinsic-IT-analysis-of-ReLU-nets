@@ -40,3 +40,10 @@ preferred-citation:
       given-names: Kristoffer
   collection-title: "Advances in Neural Information Processing Systems (NeurIPS 2026)"
   year: 2026
+  identifiers:
+    - type: doi
+      value: "10.48550/arXiv.2610.36864"
+      description: "arXiv preprint"
+    - type: url
+      value: "https://arxiv.org/abs/2610.36864"
+      description: "arXiv abstract page"
