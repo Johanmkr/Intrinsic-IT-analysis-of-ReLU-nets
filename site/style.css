@@ -46,12 +46,27 @@ h2 { font-size: 1.35rem; margin: 2.2em 0 0.5em; }
   background: var(--fg); color: var(--bg); text-decoration: none; font-weight: 500; font-size: 0.95rem;
 }
 .button:hover { opacity: 0.85; }
+.button.accent { background: var(--accent); color: #fff; }
+@media (prefers-color-scheme: dark) { .button.accent { color: var(--bg); } }
+.button.ghost { background: transparent; color: var(--fg); border: 1px solid var(--border); }
 .button.disabled { background: var(--grid); color: var(--muted); cursor: default; }
 
 .teaser { margin: 2.5rem 0 0; }
 .teaser img { width: 100%; height: auto; border-radius: 8px; background: #fff; }
 figcaption { color: var(--muted); font-size: 0.92rem; margin-top: 0.5em; }
 .placeholder { color: var(--muted); font-style: italic; }
+
+.lay-summary p { background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 8px; padding: 1rem 1.2rem; margin: 0; }
+
+.contributions { padding-left: 1.2em; }
+.contributions li { margin-bottom: 0.7em; }
+.result { border-top: 1px solid var(--border); }
+.result figure { margin: 1.2rem 0 0; }
+.result img { width: 100%; height: auto; border-radius: 8px; background: #fff; }
+.keynums { display: flex; flex-wrap: wrap; gap: 0.8rem; margin: 1rem 0; padding: 0; list-style: none; }
+.keynums li { flex: 1 1 140px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.6rem 0.9rem; }
+.keynums b { display: block; font-size: 1.5rem; font-variant-numeric: tabular-nums; color: var(--accent); }
+.keynums span { color: var(--muted); font-size: 0.88rem; line-height: 1.35; display: block; }
 
 .demo { border-top: 1px solid var(--border); }
 .controls {

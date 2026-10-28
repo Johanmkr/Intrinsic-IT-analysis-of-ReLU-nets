@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contributions and Results — Intrinsic IT Analysis of ReLU Nets</title>
+  <meta name="description" content="Main contributions and results of the NeurIPS 2026 paper Intrinsic Information-Theoretic Analysis of ReLU Nets.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1 15 L8 1 L15 15 Z M8 1 L8 15 M1 15 L15 8' fill='%231f5fa8' stroke='%23fff' stroke-width='0.8'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="hero">
+  <p class="venue">NeurIPS 2026</p>
+  <h1>Contributions and results</h1>
+  <p class="affiliations">Intrinsic Information-Theoretic Analysis of ReLU Nets</p>
+  <nav class="links" aria-label="Paper links">
+    <a class="button ghost" href="index.html">← Project page</a>
+    <a class="button" href="https://openreview.net/pdf?id=4dnKZPefBt">Paper (PDF)</a>
+    <a class="button" href="https://arxiv.org/abs/2610.36864">arXiv</a>
+    <a class="button" href="https://github.com/Johanmkr/Intrinsic-IT-analysis-of-ReLU-nets">Code</a>
+  </nav>
+</header>
+
+<main>
+  <section>
+    <h2>Main contributions</h2>
+    <p>A ReLU network splits its input space into convex linear regions, and every input carries a
+      discrete region label <i>Π</i> (its activation pattern) alongside its continuous representation
+      <i>T</i>. Quantities involving <i>Π</i> live on a finite alphabet, so they need no bin width,
+      bandwidth or cluster count. Building on this:</p>
+    <ul class="contributions">
+      <li><strong>Information decomposition.</strong> The mutual information <i>I</i>(<i>Y</i>; <i>T</i>)
+        decomposes into geometrically interpretable terms: the <em>routing information</em>
+        <i>I</i>(<i>Y</i>; <i>Π</i>), a within-region term <i>I</i>(<i>Y</i>; <i>T</i> | <i>Π</i>) and a
+        routing-loss term <i>I</i>(<i>Y</i>; <i>Π</i> | <i>T</i>), with
+        <i>I</i>(<i>Y</i>; <i>T</i>) − <i>I</i>(<i>Y</i>; <i>Π</i>) =
+        <i>I</i>(<i>Y</i>; <i>T</i> | <i>Π</i>) − <i>I</i>(<i>Y</i>; <i>Π</i> | <i>T</i>).</li>
+      <li><strong>Routing estimator.</strong> A plug-in estimator Î(<i>Y</i>; Ω<sub>D</sub>) computed
+        directly from the network's partition. In the well-sampled regime it approximates
+        <i>I</i>(<i>Y</i>; <i>Π</i>), which lower-bounds the joint information
+        <i>I</i>(<i>Y</i>; <i>Π</i>, <i>T</i>).</li>
+      <li><strong>Functional-equivalence quotient.</strong> When almost every sample gets its own region
+        the plug-in estimate saturates at <i>H</i>(<i>Y</i>). The quotient merges regions whose linear
+        operators differ by at most ε in relative Frobenius distance. ε is bounded in [0, 2] and
+        dimensionless, and is reported and audited through the compression ratio
+        ρ<sub>func</sub>(ε).</li>
+      <li><strong>Empirical study.</strong> 75 networks on three structurally distinct datasets
+        (the 2-D Composite dataset, WBC breast-cancer measurements and MNIST), plus a saturation study on
+        PCA-reduced MNIST.</li>
+    </ul>
+  </section>
+
+  <section class="result">
+    <h2>1. The routing estimator agrees with established MI estimators</h2>
+    <p>One point per network: the last hidden layer at the last epoch, estimated on the same held-out
+      points as three baselines. Within each dataset the points lie along the diagonal, so Î assigns
+      the same bit counts as the baselines without any bin width, bandwidth or cluster count. This is an
+      internal-consistency check of the estimator. It does not claim that
+      <i>I</i>(<i>Y</i>; <i>Π</i>) approximates <i>I</i>(<i>Y</i>; <i>T</i>), and the two can differ in
+      either direction.</p>
+    <ul class="keynums">
+      <li><b>r = 0.911</b><span>vs binning (K = 8, Miller–Madow)</span></li>
+      <li><b>r = 0.922</b><span>vs k-means (K = |Y|, Miller–Madow)</span></li>
+      <li><b>r = 0.892</b><span>vs KSG (k = 3)</span></li>
+      <li><b>n = 75</b><span>networks, pooled over three datasets</span></li>
+    </ul>
+    <figure>
+      <img src="assets/calibration_scatter_raw.png" width="1800" height="691" loading="lazy"
+           alt="Three scatter panels of the routing estimate against binning, k-means and KSG, one marker per network, coloured by dataset (Composite, WBC, MNIST FC); points lie near the diagonal.">
+      <figcaption>Pointwise calibration against binning, <i>k</i>-means and KSG on Composite (blue),
+        WBC (orange) and MNIST FC (green). The two width-25 WBC architectures reach occupancy
+        ρ near 1 and sit at <i>H</i>(<i>Y</i>) by construction, so their agreement carries little
+        information.</figcaption>
+    </figure>
+  </section>
+
+  <section class="result">
+    <h2>2. Layer by layer, routing information rises and stays below H(Y)</h2>
+    <p>On all three datasets Î rises monotonically with depth, tracks binning and <i>k</i>-means at
+      every layer, and stays at or below <i>H</i>(<i>Y</i>) on every layer of all 75 networks. KSG,
+      which estimates <i>I</i>(<i>Y</i>; <i>T</i>) from the continuous representation, behaves
+      differently. On MNIST FC it sits at about 2.7–2.8 bits while Î rises from about 0.95 to 2.0 bits,
+      so the gap narrows from about 1.8 to 0.65 bits. By the decomposition, a KSG-above-routing gap means
+      the within-region geometry carries class information the partition has not yet routed, and deeper
+      layers route more of it into <i>Π</i>.</p>
+    <figure>
+      <img src="assets/layer_profile_last_epoch.png" width="1800" height="634" loading="lazy"
+           alt="Three panels of bits versus layer for Composite, WBC and MNIST FC: the routing estimate rises with depth alongside binning and k-means, KSG is flatter, and all stay below the H(Y) line.">
+      <figcaption>Layerwise bits at the last epoch, mean ± 1σ over seeds. Solid: Î(<i>Y</i>; Ω<sub>D</sub>).
+        Dashed: the three baselines. Dash-dot: <i>H</i>(<i>Y</i>).</figcaption>
+    </figure>
+  </section>
+
+  <section class="result">
+    <h2>3. The functional quotient restores informative estimates under saturation</h2>
+    <p>On PCA-reduced MNIST, as the input dimension <i>d</i> grows, wide networks give nearly every
+      sample its own region and the raw estimate approaches <i>H</i>(<i>Y</i>) = 3.319 bits, whatever the
+      network has learned. At ε = 0.5 and <i>d</i> ≥ 10 the quotient pulls the estimate back below
+      <i>H</i>(<i>Y</i>) where there are redundant linear operators to collapse, and not where every
+      region implements a distinct one.</p>
+    <ul class="keynums">
+      <li><b>0.27–0.43</b><span>bits below H(Y), width 15</span></li>
+      <li><b>0.03–0.07</b><span>bits below H(Y), width 25</span></li>
+      <li><b>≤ 0.004</b><span>bits below H(Y), width 50 (stays saturated)</span></li>
+    </ul>
+    <figure>
+      <img src="assets/mnist_capacity_bars_per_arch.png" width="1800" height="722" loading="lazy"
+           alt="Bar charts of routing MI versus input dimension for four architectures; grey raw bars approach the H(Y) line for wide networks, blue quotient bars sit lower.">
+      <figcaption>Routing MI on PCA-reduced MNIST (last layer, last epoch) against input dimension
+        <i>d</i>. Grey: raw Î. Light to dark blue: Î<sub>func</sub>(ε). Error bars ±1σ over 5 seeds.
+        Dashed: <i>H</i>(<i>Y</i>).</figcaption>
+    </figure>
+    <p>The compression ratio ρ<sub>func</sub>(ε) shows where merging happens. Small-<i>d</i> networks
+      drop sharply already at ε = 0.1, while large-<i>d</i> networks stay near 1 until ε ≈ 0.2–0.3. Both
+      diagnostics point to ε ∈ [0.2, 0.5] as the operating range. Across layers, ρ<sub>func</sub> = 1 at
+      the first layer of every network and decreases with depth on average, so functional equivalence is a
+      phenomenon of compositions.</p>
+    <figure>
+      <img src="assets/mnist_rho_vs_eps.png" width="1800" height="482" loading="lazy"
+           alt="Four panels of the compression ratio rho_func versus epsilon for widths 7, 15, 25 and 50, one curve per input dimension; curves fall from 1 as epsilon grows, less so for wide networks at high dimension.">
+      <figcaption>ρ<sub>func</sub>(ε) at the last hidden layer and epoch, one curve per input dimension
+        <i>d</i>. Lower means more aggressive merging.</figcaption>
+    </figure>
+  </section>
+
+  <section class="result">
+    <h2>What the estimate does not show</h2>
+    <ul class="contributions">
+      <li><strong>Occupancy matters.</strong> The plug-in estimate is trustworthy only when regions hold
+        several points, i.e. at small ρ = |Ω<sub>D</sub>| / N. Standard bias corrections do not repair a
+        saturated partition: Miller–Madow over-corrects into negative values, and the others stay near
+        <i>H</i>(<i>Y</i>). We therefore report ρ with every estimate.</li>
+      <li><strong>High routing information is not proof of learning.</strong> Trained on randomly permuted
+        labels, the wide [25, 25, 25] Composite network still keeps 2.433 bits raw (2.329 after the
+        quotient) about the true labels, close to <i>H</i>(<i>Y</i>) = 2.639 bits, at 15.9% test accuracy.
+        Read a high estimate together with ρ and, where possible, a label-permutation control.
+        <a href="index.html#permutation">Try it in demo 4.</a></li>
+      <li><strong>ε still matters inside the window.</strong> The quotient estimate moves with ε even in
+        [0.2, 0.5], so ε is reported with every estimate and audited through ρ<sub>func</sub>.</li>
+    </ul>
+  </section>
+</main>
+
+<footer>
+  <p>All numbers and figures are from the camera-ready paper and are regenerated by the code on
+    <a href="https://github.com/Johanmkr/Intrinsic-IT-analysis-of-ReLU-nets">GitHub</a> · MIT licence.
+    <a href="index.html">Back to the project page and interactive demos.</a></p>
+</footer>
+</body>
+</html>

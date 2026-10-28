@@ -8,13 +8,18 @@ the browser from small JSON files exported from the pipeline.
 ## Page structure
 
 1. **Header** — title, authors and affiliations (from `CITATION.cff`), venue
-   (NeurIPS 2026), buttons: Paper (PDF), arXiv, OpenReview, Code.
+   (NeurIPS 2026), buttons: Paper (PDF), arXiv, OpenReview, Code, Contributions & results.
 2. **Teaser** — the pedagogical figure (partition → activation pattern → region).
-3. **Abstract** — the camera-ready abstract (filled in by task `web-content`).
-4. **Demos** — four interactive sections (below), each with a two-line
+3. **In short** — the OpenReview lay summary (`neurips_2026_paper/lay_summary.md`).
+4. **Abstract** — the camera-ready abstract (filled in by task `web-content`).
+5. **Demos** — four interactive sections (below), each with a two-line
    explanation and the quantities it displays.
-5. **BibTeX** — copy button.
-6. **Footer** — links to the code, the reproduction instructions, licence.
+6. **BibTeX** — copy button.
+7. **Footer** — links to the code, the reproduction instructions, licence.
+
+`results.html` is a static subpage with the main contributions and the key results
+(Figs. 2–5 of the paper, with their numbers from `latex/numbers.tex`). Its figures in
+`assets/` are the pipeline's `figures/*.png` downscaled to 1800 px wide.
 
 Responsive single column, light and dark mode (`prefers-color-scheme`), all
 figures drawn on `<canvas>`.

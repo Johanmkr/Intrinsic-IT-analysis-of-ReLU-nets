@@ -26,6 +26,7 @@
     <a class="button" href="https://arxiv.org/abs/2610.36864">arXiv</a>
     <a class="button" href="https://openreview.net/forum?id=4dnKZPefBt">OpenReview</a>
     <a class="button" href="https://github.com/Johanmkr/Intrinsic-IT-analysis-of-ReLU-nets">Code</a>
+    <a class="button accent" href="results.html">Contributions &amp; results</a>
   </nav>
 </header>
 
@@ -36,6 +37,24 @@
     <figcaption>A ReLU network partitions its input space into linear regions. Every input gets a
       discrete region label — its activation pattern — alongside its continuous representation.</figcaption>
   </figure>
+
+  <section class="lay-summary">
+    <h2>In short</h2>
+    <p>To understand what an AI system learns, researchers measure how much “information” its internal
+      signals carry about the right answer. In large networks this can only be estimated, and current
+      estimators depend on settings the researcher picks by hand, such as how finely to chop the signals
+      into bins. Those settings can sway the result more than the network itself, so studies of the same
+      question have reached opposite conclusions. We use a property of a widely used type of network
+      (ReLU): it divides its inputs into many regions, and treats each region with its own transformation.
+      Asking how much an input’s region reveals about its answer gives a measure of information read
+      straight from the network. It is a measure of the information stored by the geometry of the network.
+      Across 75 networks trained on three very different datasets, from handwritten digits to
+      breast-cancer measurements, it agrees with established methods. When a network carves its inputs so
+      finely that almost every example gets its own region, we merge regions that apply nearly the same
+      transformation, which restores meaningful estimates. This gives researchers a more trustworthy way to
+      study how AI systems learn, a step towards more transparent AI: instead of asking only how much
+      information a network holds, they can ask where that information lives.</p>
+  </section>
 
   <section>
     <h2>Abstract</h2>
